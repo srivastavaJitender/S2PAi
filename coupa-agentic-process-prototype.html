@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coupa Invoice Validation — Agentic AI Process Prototype</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;min-height:100vh;padding:24px 16px;color:#111827}
+.outer{max-width:980px;margin:0 auto}
+.proto-wrap{border:1px solid #d1d5db;border-radius:12px;overflow:hidden;background:#fff}
+
+/* NAV */
+.nav{background:#0a1f3c;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:50px;gap:8px;flex-wrap:wrap}
+.brand{color:#fff;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+.brand-sub{color:#7aafd4;font-size:11px;font-weight:400}
+.tabs{display:flex;gap:2px}
+.tab{color:#8aaac8;font-size:12px;padding:5px 13px;border:none;background:transparent;border-radius:4px;cursor:pointer;transition:.15s;white-space:nowrap}
+.tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tab.on{color:#fff;background:rgba(255,255,255,.15)}
+.apill{display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;color:#7dc97d;background:rgba(125,201,125,.15)}
+.dot{width:6px;height:6px;border-radius:50%;background:#7dc97d;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* SCREENS */
+.scr{display:none}
+.scr.on{display:block;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* SHARED */
+.pad{padding:20px 24px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:14px}
+.ct{font-size:12px;font-weight:600;color:#111827;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.badge{display:inline-flex;align-items:center;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;gap:3px}
+.bg{background:#dcfce7;color:#166534}
+.br{background:#fee2e2;color:#991b1b}
+.ba{background:#fef3c7;color:#92400e}
+.bb{background:#dbeafe;color:#1e40af}
+.bp2{background:#ede9fe;color:#5b21b6}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:620px){.row2{grid-template-columns:1fr}}
+
+/* ── SCREEN 1: LIVE AGENT ── */
+.agent-status-bar{background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.asb-stat{font-size:12px;color:#6b7280}
+.asb-stat strong{color:#111827;font-weight:600}
+.clock-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:#1e40af;background:#dbeafe;border:1px solid #93c5fd;padding:3px 10px;border-radius:20px}
+.stop-btn{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #fca5a5;background:#fee2e2;color:#991b1b;cursor:pointer;font-weight:500}
+.resume-btn{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #86efac;background:#f0fdf4;color:#166534;cursor:pointer;font-weight:500}
+
+.queue-list{display:flex;flex-direction:column;gap:6px}
+.qi{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;transition:.4s}
+.qi.processing{border-color:#93c5fd;background:#eff6ff}
+.qi.done-pass{border-color:#86efac;background:#f0fdf4}
+.qi.done-fail{border-color:#fca5a5;background:#fef2f2}
+.qi-inv{font-weight:600;color:#111827;min-width:100px}
+.qi-sup{color:#6b7280;flex:1}
+.spinner{display:inline-block;width:11px;height:11px;border:2px solid #93c5fd;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.log-list{display:flex;flex-direction:column;gap:4px;max-height:210px;overflow-y:auto}
+.log-item{display:flex;gap:8px;font-size:11px;padding:5px 8px;border-radius:4px;background:#f9fafb}
+.log-time{color:#9ca3af;white-space:nowrap;min-width:38px}
+.log-msg{color:#6b7280;flex:1}
+.log-msg.pass{color:#166534}
+.log-msg.fail{color:#991b1b}
+.log-msg.info{color:#1e40af}
+
+.sim-btn{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #93c5fd;background:#eff6ff;color:#1e40af;cursor:pointer;font-weight:500;margin-top:10px;display:inline-flex;align-items:center;gap:5px}
+.sim-btn:hover{background:#dbeafe}
+
+.kpi-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi-mini{background:#f9fafb;border-radius:8px;padding:10px 12px;text-align:center}
+.kpi-mini-val{font-size:22px;font-weight:600;line-height:1}
+.kpi-mini-lbl{font-size:11px;color:#6b7280;margin-top:4px}
+
+.hold-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.hold-table th{font-size:11px;color:#6b7280;font-weight:500;padding:7px 8px;border-bottom:1px solid #e5e7eb;background:#f9fafb;text-align:left}
+.hold-table td{padding:8px;border-bottom:1px solid #f3f4f6;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.row-r td{background:#fff8f8}
+.row-a td{background:#fffdf0}
+
+/* ── SCREEN 2: WALKTHROUGH ── */
+.inv-header{background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.inv-title{font-size:14px;font-weight:600;color:#111827}
+.inv-sub{font-size:12px;color:#6b7280;margin-top:2px}
+
+.stepper{display:flex;align-items:center;gap:0;margin-bottom:18px;overflow-x:auto;padding-bottom:4px}
+.step-node{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:60px;cursor:pointer}
+.step-circle{width:32px;height:32px;border-radius:50%;border:1px solid #d1d5db;background:#f9fafb;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#9ca3af;transition:.2s;position:relative;z-index:1}
+.step-circle.active{background:#dbeafe;border-color:#93c5fd;color:#1e40af}
+.step-circle.done{background:#dcfce7;border-color:#86efac;color:#166534}
+.step-circle.fail{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.step-lbl{font-size:10px;color:#9ca3af;text-align:center;max-width:60px;line-height:1.3}
+.step-lbl.active{color:#1e40af;font-weight:600}
+.step-lbl.done{color:#166534;font-weight:500}
+.step-lbl.fail{color:#991b1b;font-weight:500}
+.step-line-h{flex:1;height:1px;background:#e5e7eb;margin-top:-18px;min-width:12px}
+.step-line-h.done{background:#86efac}
+
+.step-panel{border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:14px;min-height:160px}
+.sp-title{font-size:13px;font-weight:600;color:#111827;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sp-body{font-size:12px;color:#4b5563;line-height:1.75}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.field-item{background:#f9fafb;border-radius:6px;padding:8px 10px}
+.field-lbl{font-size:10px;color:#9ca3af;margin-bottom:2px;text-transform:uppercase;letter-spacing:.03em}
+.field-val{font-size:12px;color:#111827;font-weight:500}
+.field-val.err{color:#dc2626}
+.field-val.ok{color:#16a34a}
+.check-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.check-item{display:flex;align-items:flex-start;gap:8px;padding:9px 12px;border-radius:6px;font-size:12px;line-height:1.6}
+.check-item.pass{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.check-item.fail{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.check-item.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.check-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.ai-box{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:12px;margin-top:10px}
+.ai-label{font-size:10px;color:#7c3aed;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600}
+.ai-text{font-size:12px;color:#4b5563;line-height:1.75}
+.comment-preview{background:#f9fafb;border:1px solid #fca5a5;border-radius:8px;padding:12px;font-size:11px;color:#4b5563;line-height:1.9;font-family:'Courier New',Courier,monospace;margin-top:10px;white-space:pre-wrap;word-break:break-word}
+.nav-btns{display:flex;gap:8px;justify-content:space-between;margin-top:14px;align-items:center}
+.nbtn{font-size:12px;padding:7px 16px;border-radius:6px;border:1px solid #d1d5db;background:#f9fafb;color:#374151;cursor:pointer;font-weight:500}
+.nbtn:hover{background:#f3f4f6}
+.nbtn.primary{background:#dbeafe;border-color:#93c5fd;color:#1e40af}
+.nbtn.primary:hover{background:#bfdbfe}
+.nbtn:disabled{opacity:.4;cursor:default}
+
+/* ── SCREEN 3: BUSINESS CASE ── */
+.bc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:560px){.bc-grid{grid-template-columns:1fr}}
+.bc-card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:14px}
+.bc-icon{font-size:22px;margin-bottom:8px}
+.bc-title{font-size:13px;font-weight:600;color:#111827;margin-bottom:4px}
+.bc-desc{font-size:12px;color:#4b5563;line-height:1.65}
+.bc-metric{font-size:22px;font-weight:600;margin-top:10px}
+.bc-metric.g{color:#16a34a}
+.bc-metric.b{color:#1d4ed8}
+.bc-metric.a{color:#d97706}
+
+.compare-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+.compare-table th{text-align:left;padding:8px 10px;font-size:11px;font-weight:600;color:#6b7280;border-bottom:1px solid #e5e7eb;background:#f9fafb;text-transform:uppercase;letter-spacing:.04em}
+.compare-table td{padding:8px 10px;border-bottom:1px solid #f3f4f6;color:#111827;vertical-align:top;font-size:12px}
+.compare-table td:first-child{color:#6b7280;font-size:12px}
+.yes{color:#16a34a;font-weight:500}
+.no{color:#dc2626}
+.na{color:#6b7280}
+
+.phase-row{display:flex;gap:0;margin-bottom:14px}
+.phase{flex:1;padding:14px 10px;background:#f9fafb;border:1px solid #e5e7eb;text-align:center;font-size:12px}
+.phase:first-child{border-radius:8px 0 0 8px}
+.phase:last-child{border-radius:0 8px 8px 0}
+.phase+.phase{border-left:none}
+.phase.active-phase{background:#eff6ff;border-color:#93c5fd}
+.phase-num{font-size:16px;font-weight:600;color:#111827;margin-bottom:3px}
+.phase-lbl{font-size:11px;color:#6b7280;margin-bottom:8px}
+.phase.active-phase .phase-num,.phase.active-phase .phase-lbl{color:#1e40af}
+.phase-items{font-size:11px;color:#4b5563;line-height:1.7;text-align:left;padding:0 4px}
+.phase.active-phase .phase-items{color:#1e40af}
+
+/* FOOTER */
+.page-footer{text-align:center;margin-top:16px;font-size:11px;color:#9ca3af}
+</style>
+</head>
+<body>
+<div class="outer">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div>
+      <p style="font-size:13px;font-weight:600;color:#374151">BCG Internal &nbsp;·&nbsp; EP&P Ops</p>
+      <p style="font-size:11px;color:#9ca3af;margin-top:2px">Agentic AI process prototype &nbsp;·&nbsp; Confidential &nbsp;·&nbsp; May 2026</p>
+    </div>
+    <div style="font-size:11px;color:#6b7280;background:#fff;border:1px solid #e5e7eb;padding:5px 14px;border-radius:20px">
+      &#128065;&nbsp; Prototype &mdash; for stakeholder review only
+    </div>
+  </div>
+
+  <div class="proto-wrap">
+
+    <!-- NAV -->
+    <div class="nav">
+      <div class="brand">
+        &#128737;
+        Coupa Invoice Validation &mdash; Agentic AI
+        <span class="brand-sub">EP&P Ops &nbsp;&middot;&nbsp; BCG</span>
+      </div>
+      <div class="tabs">
+        <button class="tab on" onclick="sw('live',this)">&#9654; Live agent</button>
+        <button class="tab" onclick="sw('walk',this)">&#8594; Invoice walkthrough</button>
+        <button class="tab" onclick="sw('biz',this)">&#9650; Business case</button>
+      </div>
+      <div class="apill"><div class="dot"></div><span id="agent-label">Agent running</span></div>
+    </div>
+
+    <!-- ════════ SCREEN 1: LIVE AGENT ════════ -->
+    <div class="scr on" id="s-live">
+      <div class="agent-status-bar">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <div class="asb-stat">Poll cycle <strong id="cycle-num">14</strong></div>
+          <div class="asb-stat">Today: <strong style="color:#16a34a"><span id="pass-count">38</span> passed</strong> &nbsp;&middot;&nbsp; <strong style="color:#dc2626"><span id="fail-count">9</span> failed</strong></div>
+          <div class="asb-stat">Next poll in <strong><span id="poll-cd">8</span> min</strong></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="clock-pill">&#9200; Every 10 minutes</div>
+          <button class="stop-btn" id="stop-btn" onclick="toggleAgent()">&#9646; Stop agent</button>
+        </div>
+      </div>
+
+      <div class="pad">
+        <div class="row2">
+          <!-- Queue -->
+          <div class="card">
+            <div class="ct">&#9776; Current processing queue</div>
+            <div class="queue-list" id="queue">
+              <div class="qi done-pass"><span class="qi-inv">INV-2024-0450</span><span class="qi-sup">BCG Germany</span><span style="font-size:11px;min-width:80px;text-align:right"><span class="badge bg">&#10003; Passed</span></span></div>
+              <div class="qi done-pass"><span class="qi-inv">INV-2024-0451</span><span class="qi-sup">McKinsey &amp; Co</span><span style="font-size:11px;min-width:80px;text-align:right"><span class="badge bg">&#10003; Passed</span></span></div>
+              <div class="qi done-fail"><span class="qi-inv">INV-2024-0452</span><span class="qi-sup">EY Israel</span><span style="font-size:11px;min-width:80px;text-align:right"><span class="badge br">&#10007; Failed</span></span></div>
+              <div class="qi processing"><span class="qi-inv">INV-2024-0453</span><span class="qi-sup">Deloitte IL</span><span style="font-size:11px;min-width:80px;text-align:right"><span class="badge bb"><span class="spinner"></span>Validating</span></span></div>
+              <div class="qi"><span class="qi-inv">INV-2024-0454</span><span class="qi-sup">PwC Advisory</span><span style="font-size:11px;min-width:80px;text-align:right;color:#9ca3af">Queued</span></div>
+              <div class="qi"><span class="qi-inv">INV-2024-0455</span><span class="qi-sup">KPMG Services</span><span style="font-size:11px;min-width:80px;text-align:right;color:#9ca3af">Queued</span></div>
+            </div>
+            <button class="sim-btn" onclick="simulateNext()">&#9193; Simulate next invoice</button>
+          </div>
+
+          <!-- Log -->
+          <div class="card">
+            <div class="ct">&#9889; Agent activity log</div>
+            <div class="log-list" id="log">
+              <div class="log-item"><span class="log-time">14:38</span><span class="log-msg info">Poll cycle 14 started &mdash; 6 invoices found</span></div>
+              <div class="log-item"><span class="log-time">14:38</span><span class="log-msg pass">INV-0450 &mdash; Tax &#10003; WHT &#10003; &rarr; auto-submitted</span></div>
+              <div class="log-item"><span class="log-time">14:38</span><span class="log-msg pass">INV-0451 &mdash; Tax &#10003; WHT &#10003; &rarr; auto-submitted</span></div>
+              <div class="log-item"><span class="log-time">14:38</span><span class="log-msg fail">INV-0452 &mdash; WHT &#10007; unauthorised code &rarr; on hold</span></div>
+              <div class="log-item"><span class="log-time">14:38</span><span class="log-msg fail">INV-0452 &mdash; error comment posted to Coupa</span></div>
+              <div class="log-item"><span class="log-time">14:38</span><span class="log-msg info">INV-0453 &mdash; running Tax + WHT validation...</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- On-hold table -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="ct" style="color:#dc2626">&#10007; Invoices on hold &mdash; pending AP correction</div>
+          <table class="hold-table">
+            <thead><tr>
+              <th style="width:90px">Invoice</th>
+              <th style="width:130px">Supplier</th>
+              <th>Failed checks</th>
+              <th style="width:70px">On hold</th>
+              <th style="width:60px">Attempts</th>
+            </tr></thead>
+            <tbody>
+              <tr class="row-r"><td style="font-weight:600">INV-0421</td><td>Accenture Israel</td><td><span class="badge ba">Tax</span> <span class="badge br">WHT</span></td><td style="color:#dc2626;font-weight:600">31h</td><td style="color:#dc2626">4 &#9888;</td></tr>
+              <tr class="row-a"><td style="font-weight:600">INV-0438</td><td>Deloitte IL</td><td><span class="badge ba">Tax</span></td><td style="color:#d97706;font-weight:600">11h</td><td>2</td></tr>
+              <tr><td style="font-weight:600">INV-0452</td><td>EY Israel</td><td><span class="badge br">WHT</span></td><td>1h</td><td>1</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="row2">
+          <!-- KPIs -->
+          <div class="card">
+            <div class="ct">&#9685; Today at a glance</div>
+            <div class="kpi-mini-grid">
+              <div class="kpi-mini"><div class="kpi-mini-val" id="kpi-pass" style="color:#16a34a">38</div><div class="kpi-mini-lbl">passed</div></div>
+              <div class="kpi-mini"><div class="kpi-mini-val" id="kpi-fail" style="color:#dc2626">9</div><div class="kpi-mini-lbl">failed</div></div>
+              <div class="kpi-mini"><div class="kpi-mini-val" id="kpi-total">47</div><div class="kpi-mini-lbl">total</div></div>
+              <div class="kpi-mini"><div class="kpi-mini-val" style="color:#16a34a">81%</div><div class="kpi-mini-lbl">pass rate</div></div>
+            </div>
+          </div>
+          <!-- What the agent does -->
+          <div class="card">
+            <div class="ct">&#128161; What the agent does autonomously</div>
+            <div style="display:flex;flex-direction:column;gap:7px;font-size:12px;color:#4b5563">
+              <div style="display:flex;align-items:center;gap:7px"><span style="color:#16a34a;font-weight:600">&#10003;</span>Polls Coupa every 10 minutes, 24/7</div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="color:#16a34a;font-weight:600">&#10003;</span>Runs Tax + WHT validation in parallel</div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="color:#16a34a;font-weight:600">&#10003;</span>Auto-submits passing invoices immediately</div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="color:#16a34a;font-weight:600">&#10003;</span>Posts detailed error comment to Coupa</div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="color:#16a34a;font-weight:600">&#10003;</span>Re-validates automatically after AP fixes it</div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="color:#16a34a;font-weight:600">&#10003;</span>Logs every decision to full audit trail</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ SCREEN 2: WALKTHROUGH ════════ -->
+    <div class="scr" id="s-walk">
+      <div class="inv-header">
+        <div>
+          <div class="inv-title">Invoice walkthrough &mdash; INV-2024-0452</div>
+          <div class="inv-sub">Supplier: EY Israel Ltd &nbsp;&middot;&nbsp; Amount: ILS 85,000 &nbsp;&middot;&nbsp; Date: 10 May 2026</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="badge ba">Tax: passed</span>
+          <span class="badge br">WHT: failed</span>
+        </div>
+      </div>
+
+      <div class="pad">
+        <!-- Stepper -->
+        <div class="stepper" id="stepper">
+          <div class="step-node" onclick="goStep(0)">
+            <div class="step-circle done" id="sc0">&#10003;</div>
+            <div class="step-lbl done" id="sl0">Fetched</div>
+          </div>
+          <div class="step-line-h done" id="ln01"></div>
+          <div class="step-node" onclick="goStep(1)">
+            <div class="step-circle done" id="sc1">&#10003;</div>
+            <div class="step-lbl done" id="sl1">Tax check</div>
+          </div>
+          <div class="step-line-h done" id="ln12"></div>
+          <div class="step-node" onclick="goStep(2)">
+            <div class="step-circle fail" id="sc2">&#10007;</div>
+            <div class="step-lbl fail" id="sl2">WHT check</div>
+          </div>
+          <div class="step-line-h" id="ln23"></div>
+          <div class="step-node" onclick="goStep(3)">
+            <div class="step-circle" id="sc3">4</div>
+            <div class="step-lbl" id="sl3">AI reasoning</div>
+          </div>
+          <div class="step-line-h" id="ln34"></div>
+          <div class="step-node" onclick="goStep(4)">
+            <div class="step-circle" id="sc4">5</div>
+            <div class="step-lbl" id="sl4">Action taken</div>
+          </div>
+        </div>
+
+        <!-- Step panel -->
+        <div class="step-panel" id="step-panel"></div>
+
+        <!-- Nav -->
+        <div class="nav-btns">
+          <button class="nbtn" id="prev-btn" onclick="prevStep()" disabled>&larr; Previous</button>
+          <span style="font-size:11px;color:#9ca3af">Step <span id="step-num">1</span> of 5 &mdash; click any step or use buttons</span>
+          <button class="nbtn primary" id="next-btn" onclick="nextStep()">Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ SCREEN 3: BUSINESS CASE ════════ -->
+    <div class="scr" id="s-biz">
+      <div class="pad">
+        <div style="font-size:16px;font-weight:600;color:#111827;margin-bottom:4px">Business case for approval</div>
+        <div style="font-size:13px;color:#6b7280;margin-bottom:18px">Impact, process comparison, and phased rollout plan &mdash; for mixed audience review</div>
+
+        <div class="bc-grid">
+          <div class="bc-card">
+            <div class="bc-icon">&#9200;</div>
+            <div class="bc-title">Manual review time eliminated</div>
+            <div class="bc-desc">AP team currently spends ~3 hours/day manually checking tax and WHT codes before Coupa submission. The agent handles every invoice instantly and automatically, 24/7.</div>
+            <div class="bc-metric g">~750 hrs / year saved</div>
+          </div>
+          <div class="bc-card">
+            <div class="bc-icon">&#128737;</div>
+            <div class="bc-title">SAP integration failures prevented</div>
+            <div class="bc-desc">Each SAP rejection caused by a tax or WHT error requires ~4 hours of rework across AP, finance, and the vendor. The agent catches all errors before they reach SAP.</div>
+            <div class="bc-metric g">Zero SAP rejections</div>
+          </div>
+          <div class="bc-card">
+            <div class="bc-icon">&#128260;</div>
+            <div class="bc-title">Faster invoice cycle time</div>
+            <div class="bc-desc">Invoices that pass all checks are auto-submitted within 10 minutes of arrival in Coupa — no waiting for AP team availability. Vendor payment timelines improve significantly.</div>
+            <div class="bc-metric b">10 min vs 24&ndash;48 hrs</div>
+          </div>
+          <div class="bc-card">
+            <div class="bc-icon">&#128065;</div>
+            <div class="bc-title">Full compliance audit trail</div>
+            <div class="bc-desc">Every agent decision is logged with timestamp, validation results, and Claude AI reasoning. Complete traceability for internal audit, compliance, and management reporting.</div>
+            <div class="bc-metric b">100% auditable</div>
+          </div>
+        </div>
+
+        <!-- Comparison table -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="ct">&#8596; Current process vs agentic AI agent</div>
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th style="width:200px">Capability</th>
+                <th>Current (manual / n8n)</th>
+                <th>Agentic AI agent</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Invoice pickup</td><td class="na">Manual &mdash; when AP checks queue</td><td class="yes">Automatic every 10 min, 24/7</td></tr>
+              <tr><td>Tax validation</td><td class="na">Manual cross-check in Coupa</td><td class="yes">Automated &mdash; 4 rules across all lines</td></tr>
+              <tr><td>WHT validation</td><td class="na">Partially automated (n8n)</td><td class="yes">Fully automated vs vendor master</td></tr>
+              <tr><td>Error comment in Coupa</td><td class="na">Manual or n8n (partial)</td><td class="yes">Structured, detailed, auto-posted</td></tr>
+              <tr><td>Re-validation after fix</td><td class="no">Manual re-submission needed</td><td class="yes">Automatic on next 10-min cycle</td></tr>
+              <tr><td>AI reasoning on edge cases</td><td class="no">None</td><td class="yes">Claude Sonnet &mdash; submit / hold / escalate</td></tr>
+              <tr><td>Audit trail</td><td class="no">None</td><td class="yes">Full JSONL log &mdash; every decision</td></tr>
+              <tr><td>Live ops dashboard</td><td class="no">None</td><td class="yes">Real-time &mdash; auto-refresh every 60s</td></tr>
+              <tr><td>Emergency stop</td><td class="na">Stop n8n workflow</td><td class="yes">One config flag &mdash; instant pause</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Phases -->
+        <div class="card">
+          <div class="ct">&#128640; Phased rollout plan</div>
+          <div class="phase-row">
+            <div class="phase active-phase">
+              <div class="phase-num">Phase 1</div>
+              <div class="phase-lbl">Now &nbsp;&middot;&nbsp; 2 weeks</div>
+              <div class="phase-items">&#10003; Tax + WHT validation<br>&#10003; Coupa error comments<br>&#10003; Ops dashboard<br>&#10003; Full audit trail</div>
+            </div>
+            <div class="phase">
+              <div class="phase-num">Phase 2</div>
+              <div class="phase-lbl">Month 2</div>
+              <div class="phase-items">&#9702; SAP read-only check<br>&#9702; PRN validation<br>&#9702; Email escalation<br>&#9702; Retry logic extended</div>
+            </div>
+            <div class="phase">
+              <div class="phase-num">Phase 3</div>
+              <div class="phase-lbl">Month 3+</div>
+              <div class="phase-items">&#9702; Auto minor corrections<br>&#9702; Supplier self-service<br>&#9702; Predictive error flags<br>&#9702; SAP write integration</div>
+            </div>
+          </div>
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:12px;color:#1e40af;line-height:1.7">
+            <strong>Approval requested for Phase 1 only.</strong> Phases 2 and 3 each require separate sign-off. The agent can be paused instantly at any time with no impact to Coupa or SAP operations.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /proto-wrap -->
+
+  <div class="page-footer">
+    Coupa Invoice Validation Agent &nbsp;&middot;&nbsp; EP&P Ops &nbsp;&middot;&nbsp; BCG Internal &nbsp;&middot;&nbsp; Agentic AI Prototype v1.0 &nbsp;&middot;&nbsp; May 2026
+  </div>
+
+</div><!-- /outer -->
+
+<script>
+/* ── TAB SWITCHING ── */
+function sw(name,btn){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('s-'+name).classList.add('on');
+  btn.classList.add('on');
+}
+
+/* ── AGENT STOP/RESUME ── */
+let agentOn=true;
+function toggleAgent(){
+  agentOn=!agentOn;
+  const btn=document.getElementById('stop-btn');
+  const lbl=document.getElementById('agent-label');
+  const dot=document.querySelector('.dot');
+  if(!agentOn){
+    btn.className='resume-btn';
+    btn.innerHTML='&#9654; Resume agent';
+    lbl.textContent='Agent stopped';
+    dot.style.background='#ef4444';
+    dot.style.animation='none';
+  } else {
+    btn.className='stop-btn';
+    btn.innerHTML='&#9646; Stop agent';
+    lbl.textContent='Agent running';
+    dot.style.background='#7dc97d';
+    dot.style.animation='pulse 2s infinite';
+  }
+}
+
+/* ── SIMULATE NEXT INVOICE ── */
+const sims=[
+  {inv:'INV-2024-0456',sup:'KPMG Services',result:'pass',msg:'Tax &#10003; WHT &#10003; &rarr; auto-submitted'},
+  {inv:'INV-2024-0457',sup:'Infosys BPM',result:'fail',msg:'Tax &#10007; rate mismatch Line 2 &rarr; on hold, comment posted'},
+  {inv:'INV-2024-0458',sup:'BCG Germany',result:'pass',msg:'Tax &#10003; WHT &#10003; &rarr; auto-submitted'},
+  {inv:'INV-2024-0459',sup:'PwC Singapore',result:'pass',msg:'Tax &#10003; WHT &#10003; &rarr; auto-submitted'},
+  {inv:'INV-2024-0460',sup:'Capgemini IL',result:'fail',msg:'WHT &#10007; unauthorised code &rarr; on hold, comment posted'},
+];
+let simIdx=0;
+function simulateNext(){
+  if(!agentOn){alert('Agent is currently stopped. Click Resume agent first.');return;}
+  const s=sims[simIdx%sims.length];simIdx++;
+  const queue=document.getElementById('queue');
+  const log=document.getElementById('log');
+  const row=document.createElement('div');
+  row.className='qi processing';
+  row.innerHTML='<span class="qi-inv">'+s.inv+'</span><span class="qi-sup">'+s.sup+'</span><span style="font-size:11px;min-width:80px;text-align:right"><span class="badge bb"><span class="spinner"></span>Validating</span></span>';
+  queue.appendChild(row);
+  const now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const addLog=(msg,cls)=>{
+    const li=document.createElement('div');
+    li.className='log-item';
+    li.innerHTML='<span class="log-time">'+now+'</span><span class="log-msg '+cls+'">'+msg+'</span>';
+    log.appendChild(li);
+    log.scrollTop=log.scrollHeight;
+  };
+  addLog(s.inv+' &mdash; running Tax + WHT validation...','info');
+  setTimeout(()=>{
+    const pass=s.result==='pass';
+    row.className='qi '+(pass?'done-pass':'done-fail');
+    row.innerHTML='<span class="qi-inv">'+s.inv+'</span><span class="qi-sup">'+s.sup+'</span><span style="font-size:11px;min-width:80px;text-align:right"><span class="badge '+(pass?'bg':'br')+'">'+(pass?'&#10003; Passed':'&#10007; Failed')+'</span></span>';
+    addLog(s.inv+' &mdash; '+s.msg,pass?'pass':'fail');
+    const pc=document.getElementById('pass-count');
+    const fc=document.getElementById('fail-count');
+    const kp=document.getElementById('kpi-pass');
+    const kf=document.getElementById('kpi-fail');
+    const kt=document.getElementById('kpi-total');
+    if(pass){const v=parseInt(pc.textContent)+1;pc.textContent=v;kp.textContent=v;}
+    else{const v=parseInt(fc.textContent)+1;fc.textContent=v;kf.textContent=v;}
+    kt.textContent=parseInt(document.getElementById('kpi-pass').textContent)+parseInt(document.getElementById('kpi-fail').textContent);
+  },1800);
+}
+
+/* ── WALKTHROUGH STEPS ── */
+const steps=[
+  {
+    title:'Step 1 &mdash; invoice fetched from Coupa',
+    icon:'&#128228;',color:'#1e40af',
+    body:'The agent polls Coupa every 10 minutes. It detected this invoice in status <span class="badge bb">draft</span> with AP hold code &ldquo;Pending Agent Review&rdquo; and retrieved all invoice lines plus vendor master data.',
+    extra:`<div class="field-grid">
+      <div class="field-item"><div class="field-lbl">Invoice number</div><div class="field-val">INV-2024-0452</div></div>
+      <div class="field-item"><div class="field-lbl">Supplier</div><div class="field-val">EY Israel Ltd</div></div>
+      <div class="field-item"><div class="field-lbl">Gross total</div><div class="field-val">ILS 85,000</div></div>
+      <div class="field-item"><div class="field-lbl">Invoice lines</div><div class="field-val">3 lines</div></div>
+      <div class="field-item"><div class="field-lbl">Tax code (Line 1)</div><div class="field-val ok">IL_VAT_17</div></div>
+      <div class="field-item"><div class="field-lbl">WHT code applied</div><div class="field-val err">IL_Z9_99 &#9888;</div></div>
+    </div>`
+  },
+  {
+    title:'Step 2 &mdash; tax validation passed',
+    icon:'&#10003;',color:'#166534',
+    body:'The tax validator ran 4 checks across all 3 invoice lines simultaneously. All tax codes, rates, and calculated amounts matched the Coupa master data exactly.',
+    extra:`<div class="check-list">
+      <div class="check-item pass"><span class="check-icon">&#10003;</span><div><strong>Rule 1a</strong> &mdash; tax rate matches master rate: IL_VAT_17 = 17% confirmed &#10003;</div></div>
+      <div class="check-item pass"><span class="check-icon">&#10003;</span><div><strong>Rule 1b</strong> &mdash; zero-rate code check: not applicable to this invoice &#10003;</div></div>
+      <div class="check-item pass"><span class="check-icon">&#10003;</span><div><strong>Rule 1c</strong> &mdash; tax amount vs master rate: ILS 14,450 = 17% of ILS 85,000 &#10003;</div></div>
+      <div class="check-item pass"><span class="check-icon">&#10003;</span><div><strong>Rule 2</strong> &mdash; tax amount vs line rate: consistent across all 3 lines &#10003;</div></div>
+    </div>`
+  },
+  {
+    title:'Step 3 &mdash; WHT validation failed',
+    icon:'&#10007;',color:'#991b1b',
+    body:'The WHT validator compared the codes applied on the invoice against EY Israel&rsquo;s vendor master configuration. An unauthorised withholding tax code was detected.',
+    extra:`<div class="check-list">
+      <div class="check-item fail"><span class="check-icon">&#10007;</span><div>
+        <strong>Unauthorised WHT code found:</strong> IL_Z9_99 is applied on the invoice but is <strong>not present</strong> in EY Israel&rsquo;s vendor master.<br>
+        <span style="margin-top:6px;display:block">Vendor master allows: <strong>IL_Z0_00, IL_Z1_10</strong></span>
+        <span>Applied on invoice: <strong style="color:#dc2626">IL_Z9_99</strong></span>
+      </div></div>
+    </div>`
+  },
+  {
+    title:'Step 4 &mdash; Claude AI reasoning',
+    icon:'&#129504;',color:'#5b21b6',
+    body:'Because the WHT code is completely outside the vendor master (not a minor rounding or data-entry ambiguity), the agent called Claude AI to confirm the recommended action.',
+    extra:`<div class="ai-box">
+      <div class="ai-label">&#10024; Claude Sonnet &mdash; agent reasoning</div>
+      <div class="ai-text">Invoice INV-2024-0452 has a clear WHT non-compliance &mdash; code IL_Z9_99 is not present in EY Israel&rsquo;s vendor master and does not resemble a data-entry variation of any permitted code. Tax validation passed cleanly so the issue is isolated to WHT. This is the first validation attempt.<br><br><strong>Decision: hold.</strong> Post a structured error comment to Coupa so the AP team can identify and correct the code. No escalation required at this stage &mdash; re-validate automatically after correction.</div>
+    </div>`
+  },
+  {
+    title:'Step 5 &mdash; autonomous action taken',
+    icon:'&#9654;',color:'#1e40af',
+    body:'The agent executed all actions autonomously with zero human intervention: set the invoice to on-hold, updated the AP hold code, posted a structured error comment to Coupa, and wrote a full audit log entry.',
+    extra:`<div class="comment-preview">&#9888;&#65039; Invoice Validation Findings
+&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;
+Invoice  : #INV-2024-0452 (ID: 452)
+Supplier : EY Israel Ltd
+Amount   : ILS 85,000
+Reviewed : 15 May 2026
+&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;
+
+FAILED CHECKS (1):
+
+[WHT VALIDATION]
+&#10007; Status : FAILED
+  Issue  : Unauthorised WHT code applied
+  Found  : IL_Z9_99
+  Allowed: IL_Z0_00, IL_Z1_10
+  Action : Update WHT code to an approved
+           code from the vendor master and
+           save the invoice in Coupa.
+
+PASSED CHECKS (1):
+  &#10003; Tax Validation: all 4 rules passed
+
+&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;
+ACTION REQUIRED:
+Fix the &#10007; item above and save the invoice.
+The agent will auto re-validate within 10 min.
+Support: bcg-coupa-support@bcg.com
+&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;
+Verified by: Coupa Validation Agent v2.0</div>`
+  }
+];
+
+let curStep=0;
+function renderStep(i){
+  const d=steps[i];
+  document.getElementById('step-panel').innerHTML=
+    '<div class="sp-title"><span style="font-size:18px;color:'+d.color+'">'+d.icon+'</span>'+d.title+'</div>'+
+    '<div class="sp-body">'+d.body+'</div>'+d.extra;
+  document.getElementById('step-num').textContent=i+1;
+  document.getElementById('prev-btn').disabled=i===0;
+  document.getElementById('next-btn').disabled=i===steps.length-1;
+}
+function goStep(i){curStep=i;renderStep(i);}
+function nextStep(){if(curStep<steps.length-1){curStep++;renderStep(curStep);}}
+function prevStep(){if(curStep>0){curStep--;renderStep(curStep);}}
+renderStep(0);
+
+/* ── POLL COUNTDOWN ── */
+let pollCd=8;
+setInterval(()=>{
+  if(!agentOn)return;
+  pollCd--;
+  if(pollCd<0){pollCd=10;const c=document.getElementById('cycle-num');if(c)c.textContent=parseInt(c.textContent)+1;}
+  const el=document.getElementById('poll-cd');
+  if(el)el.textContent=pollCd;
+},60000);
+</script>
+</body>
+</html>

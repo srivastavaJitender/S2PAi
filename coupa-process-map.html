@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coupa Validation Agent — Low-Level Technical Process Map</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;min-height:100vh;padding:24px 16px;color:#111827}
+.outer{max-width:1100px;margin:0 auto}
+.proto-wrap{border:1px solid #d1d5db;border-radius:12px;overflow:hidden;background:#fff}
+
+/* NAV */
+.nav{background:#0a1f3c;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:50px;gap:8px;flex-wrap:wrap}
+.brand{color:#fff;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+.brand-sub{color:#7aafd4;font-size:11px}
+.tabs{display:flex;gap:2px;flex-wrap:wrap}
+.tab{color:#8aaac8;font-size:11px;padding:5px 11px;border:none;background:transparent;border-radius:4px;cursor:pointer;transition:.15s;white-space:nowrap}
+.tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tab.on{color:#fff;background:rgba(255,255,255,.15)}
+.vtag{font-size:10px;padding:3px 10px;border-radius:10px;background:rgba(125,201,125,.2);color:#7dc97d;font-weight:600;white-space:nowrap}
+.scr{display:none}.scr.on{display:block;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.pad{padding:20px 24px}
+.sh{font-size:15px;font-weight:600;color:#111827;margin-bottom:3px}
+.ss{font-size:12px;color:#6b7280;margin-bottom:18px}
+
+/* PROCESS MAP BASE */
+.pm{width:100%;overflow-x:auto}
+.pm-inner{min-width:900px;padding:4px 0 12px}
+
+/* SWIMLANE */
+.swimlane{display:flex;margin-bottom:0;position:relative}
+.lane-label{width:110px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font-size:10px;font-weight:600;color:#6b7280;text-align:right;text-transform:uppercase;letter-spacing:.05em;line-height:1.3;border-right:2px solid #e5e7eb;min-height:70px}
+.lane-body{flex:1;padding:8px 8px 8px 14px;position:relative;border-bottom:1px solid #f3f4f6;min-height:70px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.swimlane:last-child .lane-body{border-bottom:none}
+
+/* PROCESS NODE TYPES */
+.pnode{border-radius:6px;padding:6px 10px;font-size:11px;display:inline-flex;flex-direction:column;gap:2px;position:relative;border:1px solid transparent}
+.pnode-title{font-weight:600;font-size:11px;line-height:1.3}
+.pnode-sub{font-size:10px;opacity:.8;line-height:1.3}
+
+/* Colors by type */
+.pn-trigger{background:#dbeafe;border-color:#93c5fd;color:#1e40af}
+.pn-check{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+.pn-api{background:#ecfdf5;border-color:#6ee7b7;color:#065f46}
+.pn-claude{background:#ede9fe;border-color:#c4b5fd;color:#4c1d95}
+.pn-decision{background:#fff7ed;border-color:#fdba74;color:#9a3412;border-radius:0;transform:none;clip-path:polygon(10px 0%,calc(100% - 10px) 0%,100% 50%,calc(100% - 10px) 100%,10px 100%,0% 50%)}
+.pn-action{background:#f0fdf4;border-color:#86efac;color:#14532d}
+.pn-error{background:#fef2f2;border-color:#fca5a5;color:#7f1d1d}
+.pn-store{background:#f5f3ff;border-color:#a5b4fc;color:#3730a3}
+.pn-log{background:#f9fafb;border-color:#d1d5db;color:#374151}
+.pn-notify{background:#fff1f2;border-color:#fda4af;color:#881337}
+
+/* CONNECTOR */
+.conn{display:flex;align-items:center;gap:0;flex-shrink:0}
+.conn-line{height:1px;background:#d1d5db;width:20px;flex-shrink:0}
+.conn-arrow{color:#9ca3af;font-size:12px;line-height:1;flex-shrink:0;margin-left:-4px}
+.conn-lbl{font-size:9px;color:#9ca3af;white-space:nowrap;margin:0 3px}
+
+/* VERTICAL CONNECTOR within lane */
+.vconn{width:1px;height:16px;background:#d1d5db;margin:0 auto;position:relative}
+.vconn::after{content:'▼';position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);font-size:8px;color:#9ca3af}
+
+/* SECTION HEADER */
+.sec-hdr{background:#f8faff;border-left:3px solid #3b82f6;padding:8px 14px;margin-bottom:0;border-bottom:1px solid #e5e7eb}
+.sec-hdr-title{font-size:12px;font-weight:600;color:#1e40af}
+.sec-hdr-sub{font-size:11px;color:#6b7280;margin-top:1px}
+
+/* LEGEND */
+.legend{display:flex;gap:10px;flex-wrap:wrap;padding:12px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;font-size:11px}
+.leg-item{display:flex;align-items:center;gap:5px}
+.leg-box{width:14px;height:14px;border-radius:3px;border:1px solid transparent;flex-shrink:0}
+
+/* CODE BLOCK */
+.code{background:#1e2533;color:#a8b4c8;font-family:'Courier New',monospace;font-size:11px;border-radius:8px;padding:12px;line-height:1.85;overflow-x:auto;white-space:pre;margin-top:8px;margin-bottom:12px}
+.code .kw{color:#7eb8f7}.code .fn{color:#7ed4a4}.code .st{color:#f4bd7c}.code .cm{color:#5a6a7e}.code .cl{color:#e09ec7}.code .nu{color:#f4a76a}
+
+/* DATA FLOW */
+.df-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.df-card{border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.df-head{padding:8px 12px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px}
+.df-body{padding:10px 12px;font-size:11px;color:#4b5563;line-height:1.7}
+.df-field{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f3f4f6;font-size:11px}
+.df-field:last-child{border:none}
+.df-key{color:#374151;font-weight:500;font-family:'Courier New',monospace;font-size:10px}
+.df-val{color:#6b7280;font-size:10px;text-align:right}
+.df-type{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
+.t-str{background:#dbeafe;color:#1e40af}
+.t-num{background:#dcfce7;color:#166534}
+.t-bool{background:#fef3c7;color:#92400e}
+.t-list{background:#ede9fe;color:#5b21b6}
+.t-dict{background:#fff7ed;color:#9a3412}
+
+/* ERROR HANDLING TABLE */
+.err-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}
+.err-tbl th{padding:8px 10px;font-size:10px;font-weight:600;color:#6b7280;border-bottom:1px solid #e5e7eb;background:#f9fafb;text-align:left;text-transform:uppercase;letter-spacing:.04em}
+.err-tbl td{padding:7px 10px;border-bottom:1px solid #f3f4f6;vertical-align:top;color:#4b5563}
+.err-tbl tr:last-child td{border:none}
+.err-tbl td:first-child{font-weight:600;color:#111827;font-family:'Courier New',monospace;font-size:10px}
+
+/* SEQUENCE TABLE */
+.seq-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;table-layout:fixed}
+.seq-tbl th{padding:8px 10px;font-size:10px;font-weight:600;color:#6b7280;border-bottom:1px solid #e5e7eb;background:#f9fafb;text-align:left}
+.seq-tbl td{padding:7px 10px;border-bottom:1px solid #f3f4f6;vertical-align:top;font-size:11px;color:#4b5563}
+.seq-tbl tr:last-child td{border:none}
+.seq-num{width:30px;font-weight:700;color:#111827;font-size:13px}
+.seq-comp{width:110px;font-weight:600;color:#374151;font-family:'Courier New',monospace;font-size:10px}
+.seq-action{color:#374151;font-weight:500}
+.seq-input{color:#6b7280}
+.seq-output{color:#166534;font-weight:500}
+
+/* SHARED */
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:12px}
+.ct{font-size:12px;font-weight:600;color:#111827;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sep{height:1px;background:#e5e7eb;margin:14px 0}
+.badge{display:inline-flex;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.bg{background:#dcfce7;color:#166534}.br{background:#fee2e2;color:#991b1b}
+.ba{background:#fef3c7;color:#92400e}.bb{background:#dbeafe;color:#1e40af}
+.bp{background:#ede9fe;color:#5b21b6}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.row2,.df-grid{grid-template-columns:1fr}}
+.hb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;text-decoration:none}
+.hb:hover{background:#f9fafb}
+.pf{text-align:center;margin-top:16px;font-size:11px;color:#9ca3af}
+</style>
+</head>
+<body>
+<div class="outer">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="index.html" class="hb">&#8592; Home</a>
+      <div>
+        <p style="font-size:13px;font-weight:600;color:#374151">BCG Internal &nbsp;&middot;&nbsp; EP&P Ops</p>
+        <p style="font-size:11px;color:#9ca3af;margin-top:1px">Low-level technical process map &nbsp;&middot;&nbsp; For technical review &nbsp;&middot;&nbsp; Confidential</p>
+      </div>
+    </div>
+    <span style="font-size:11px;color:#1e40af;background:#eff6ff;border:1px solid #93c5fd;padding:5px 14px;border-radius:20px;font-weight:600">&#128301; Low-level technical design</span>
+  </div>
+
+  <div class="proto-wrap">
+    <div class="nav">
+      <div class="brand">&#128301; Coupa Validation Agent &mdash; Low-Level Technical Process Map <span class="brand-sub">v3.0</span></div>
+      <div class="tabs">
+        <button class="tab on" onclick="sw('pm',this)">&#9654; Process map</button>
+        <button class="tab" onclick="sw('seq',this)">&#9776; Sequence</button>
+        <button class="tab" onclick="sw('data',this)">&#128451; Data flows</button>
+        <button class="tab" onclick="sw('api',this)">&#127760; API contracts</button>
+        <button class="tab" onclick="sw('err',this)">&#9888; Error handling</button>
+        <button class="tab" onclick="sw('state',this)">&#128260; State machine</button>
+      </div>
+      <span class="vtag">v3.0</span>
+    </div>
+
+    <!-- ════════ PROCESS MAP ════════ -->
+    <div class="scr on" id="s-pm">
+    <div style="padding:16px 24px 8px">
+      <div class="sh">End-to-end process map — swimlane view</div>
+      <div class="ss">Full low-level flow across all system components. Read left to right within each lane.</div>
+    </div>
+
+    <!-- SECTION 1: POLL CYCLE -->
+    <div class="sec-hdr">
+      <div class="sec-hdr-title">Phase 1 &mdash; Poll cycle (every 10 minutes)</div>
+      <div class="sec-hdr-sub">poller.py &middot; asyncio Loop 1 &amp; Loop 2 running concurrently</div>
+    </div>
+    <div class="pm"><div class="pm-inner">
+
+      <div class="swimlane">
+        <div class="lane-label">Scheduler<br>(asyncio)</div>
+        <div class="lane-body">
+          <div class="pnode pn-trigger"><div class="pnode-title">Loop wakes</div><div class="pnode-sub">asyncio.sleep(600) ends</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">Emergency stop?</div><div class="pnode-sub">Read agent_config.json</div></div>
+          <div class="conn"><div class="conn-line"></div><span class="conn-lbl" style="color:#16a34a">no</span><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-api"><div class="pnode-title">OAuth2 token valid?</div><div class="pnode-sub">Check expiry cache</div></div>
+          <div class="conn"><div class="conn-line"></div><span class="conn-lbl" style="color:#d97706">expired</span><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-api"><div class="pnode-title">POST /oauth2/token</div><div class="pnode-sub">client_credentials grant</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Cache token</div><div class="pnode-sub">expires_in &minus; 60s</div></div>
+        </div>
+      </div>
+
+      <div class="swimlane">
+        <div class="lane-label">Coupa API<br>fetch</div>
+        <div class="lane-body">
+          <div class="pnode pn-api"><div class="pnode-title">GET /invoices</div><div class="pnode-sub">status=draft &amp; ap-hold-code filter</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">Response 200?</div><div class="pnode-sub">Check HTTP status</div></div>
+          <div class="conn"><div class="conn-line"></div><span class="conn-lbl" style="color:#16a34a">yes</span><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">invoices.length &gt; 0?</div><div class="pnode-sub">Any new invoices?</div></div>
+          <div class="conn"><div class="conn-line"></div><span class="conn-lbl" style="color:#16a34a">yes</span><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">Already processed?</div><div class="pnode-sub">Check state.json</div></div>
+          <div class="conn"><div class="conn-line"></div><span class="conn-lbl" style="color:#16a34a">no</span><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-claude"><div class="pnode-title">agent.process_invoice(id)</div><div class="pnode-sub">Hand off to Claude loop</div></div>
+        </div>
+      </div>
+
+    </div></div>
+
+    <!-- SECTION 2: CLAUDE AGENTIC LOOP -->
+    <div class="sec-hdr" style="margin-top:8px">
+      <div class="sec-hdr-title">Phase 2 &mdash; Claude agentic loop (per invoice)</div>
+      <div class="sec-hdr-sub">agent.py &middot; Anthropic tool-use API &middot; Up to 20 iterations</div>
+    </div>
+    <div class="pm"><div class="pm-inner">
+
+      <div class="swimlane">
+        <div class="lane-label">Agent init</div>
+        <div class="lane-body">
+          <div class="pnode pn-store"><div class="pnode-title">Load state</div><div class="pnode-sub">state.json → attempt count</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Build initial message</div><div class="pnode-sub">invoice_id + attempt + timestamp</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Load system prompt</div><div class="pnode-sub">prompts/system_prompt.txt</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Load tool definitions</div><div class="pnode-sub">tools/registry.py → 12 tools</div></div>
+        </div>
+      </div>
+
+      <div class="swimlane">
+        <div class="lane-label">Anthropic<br>API call</div>
+        <div class="lane-body">
+          <div class="pnode pn-claude"><div class="pnode-title">POST /v1/messages</div><div class="pnode-sub">model + system + tools + messages</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">stop_reason?</div><div class="pnode-sub">end_turn or tool_use</div></div>
+          <div class="conn"><div class="conn-line"></div><span class="conn-lbl" style="color:#7c3aed">tool_use</span><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-claude"><div class="pnode-title">Extract tool_use blocks</div><div class="pnode-sub">block.name + block.input</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">Iteration &lt; 20?</div><div class="pnode-sub">Safety limit check</div></div>
+        </div>
+      </div>
+
+      <div class="swimlane">
+        <div class="lane-label">Tool<br>execution</div>
+        <div class="lane-body">
+          <div class="pnode pn-api"><div class="pnode-title">execute_tool(name, input)</div><div class="pnode-sub">handlers.py dispatcher</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-api"><div class="pnode-title">Run handler</div><div class="pnode-sub">Coupa API / validator / memory</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Serialise result</div><div class="pnode-sub">json.dumps() → string</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-claude"><div class="pnode-title">Append to messages[]</div><div class="pnode-sub">role:assistant + role:user(tool_result)</div></div>
+          <div class="conn"><div class="conn-line"></div><span class="conn-lbl" style="color:#7c3aed">loop</span><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-claude"><div class="pnode-title">Next API call</div><div class="pnode-sub">Full history in messages[]</div></div>
+        </div>
+      </div>
+
+    </div></div>
+
+    <!-- SECTION 3: VALIDATION -->
+    <div class="sec-hdr" style="margin-top:8px">
+      <div class="sec-hdr-title">Phase 3 &mdash; Validation execution (inside tool handlers)</div>
+      <div class="sec-hdr-sub">validators/tax_validator.py &middot; validators/wht_validator.py &middot; Called by tools/handlers.py</div>
+    </div>
+    <div class="pm"><div class="pm-inner">
+
+      <div class="swimlane">
+        <div class="lane-label">Tax<br>validator</div>
+        <div class="lane-body">
+          <div class="pnode pn-api"><div class="pnode-title">GET /invoices/{id}</div><div class="pnode-sub">Full invoice header</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-api"><div class="pnode-title">GET /invoices/{id}/invoice-lines</div><div class="pnode-sub">All invoice lines</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">For each line</div><div class="pnode-sub">Rule 1a: rate vs master</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">Rule 1b</div><div class="pnode-sub">Zero-rate + non-zero amount</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">Rule 1c</div><div class="pnode-sub">Amount vs master rate</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">Rule 2</div><div class="pnode-sub">Amount vs line rate</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Return ValidationResult</div><div class="pnode-sub">status + details list</div></div>
+        </div>
+      </div>
+
+      <div class="swimlane">
+        <div class="lane-label">WHT<br>validator</div>
+        <div class="lane-body">
+          <div class="pnode pn-api"><div class="pnode-title">Parse custom-fields</div><div class="pnode-sub">"withholding-tax" field</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">Extract vendor codes</div><div class="pnode-sub">Regex: "WHT Codes: X,Y | ..."</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">Extract applied codes</div><div class="pnode-sub">Header WHT + all line WHT</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">Deduplicate applied</div><div class="pnode-sub">set() on code list</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">unauthorised = applied &minus; vendor</div><div class="pnode-sub">List comprehension</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Return ValidationResult</div><div class="pnode-sub">status + unauthorised codes</div></div>
+        </div>
+      </div>
+
+    </div></div>
+
+    <!-- SECTION 4: DECISION + ACTION -->
+    <div class="sec-hdr" style="margin-top:8px">
+      <div class="sec-hdr-title">Phase 4 &mdash; Decision &amp; Coupa action</div>
+      <div class="sec-hdr-sub">Claude decides action &rarr; tool handlers execute &rarr; coupa_client.py API calls</div>
+    </div>
+    <div class="pm"><div class="pm-inner">
+
+      <div class="swimlane">
+        <div class="lane-label">Claude<br>decision</div>
+        <div class="lane-body">
+          <div class="pnode pn-claude"><div class="pnode-title">Synthesise all results</div><div class="pnode-sub">Full context in messages[]</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check" style="background:#fff7ed;border-color:#fdba74;color:#9a3412;padding:8px 14px"><div class="pnode-title">Decision</div><div class="pnode-sub">submit / hold / escalate</div></div>
+          <div class="conn"><div class="conn-line"></div><span class="conn-lbl" style="color:#16a34a">PASS</span><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-action"><div class="pnode-title">call post_comment(pass)</div><div class="pnode-sub">Claude writes pass text</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-action"><div class="pnode-title">call submit_invoice(id)</div><div class="pnode-sub">Clear ap-hold-code</div></div>
+        </div>
+      </div>
+
+      <div class="swimlane">
+        <div class="lane-label">Fail<br>path</div>
+        <div class="lane-body">
+          <div class="pnode pn-error"><div class="pnode-title">FAIL detected</div><div class="pnode-sub">Claude decides hold/escalate</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-error"><div class="pnode-title">call post_comment(fail)</div><div class="pnode-sub">Claude writes error text</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-error"><div class="pnode-title">call set_on_hold(id)</div><div class="pnode-sub">PUT ap-hold-code = "Pending AP"</div></div>
+          <div class="conn"><div class="conn-line"></div><span class="conn-lbl" style="color:#dc2626">3rd+</span><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-notify"><div class="pnode-title">call escalate(id)</div><div class="pnode-sub">Email AP manager + hold</div></div>
+        </div>
+      </div>
+
+      <div class="swimlane">
+        <div class="lane-label">Coupa<br>API calls</div>
+        <div class="lane-body">
+          <div class="pnode pn-api"><div class="pnode-title">POST /invoices/{id}/comments</div><div class="pnode-sub">Claude's comment text</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">200 OK?</div><div class="pnode-sub">Retry 3&times; on failure</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-api"><div class="pnode-title">PUT /invoices/{id}</div><div class="pnode-sub">Update custom-fields</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-check"><div class="pnode-title">200 OK?</div><div class="pnode-sub">Retry 3&times; on failure</div></div>
+        </div>
+      </div>
+
+    </div></div>
+
+    <!-- SECTION 5: POST-PROCESSING -->
+    <div class="sec-hdr" style="margin-top:8px">
+      <div class="sec-hdr-title">Phase 5 &mdash; Memory, reflection &amp; audit</div>
+      <div class="sec-hdr-sub">store_reflection tool &middot; audit_logger.py &middot; state_manager.py</div>
+    </div>
+    <div class="pm"><div class="pm-inner">
+
+      <div class="swimlane">
+        <div class="lane-label">Memory<br>&amp; learning</div>
+        <div class="lane-body">
+          <div class="pnode pn-claude"><div class="pnode-title">call store_reflection()</div><div class="pnode-sub">Claude calls this last</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Read vendor_patterns.json</div><div class="pnode-sub">Load existing vendor entry</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Upsert vendor entry</div><div class="pnode-sub">Increment counts + append history</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Write vendor_patterns.json</div><div class="pnode-sub">Atomic file write</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-log"><div class="pnode-title">Append agent_reflections.jsonl</div><div class="pnode-sub">One JSON line</div></div>
+        </div>
+      </div>
+
+      <div class="swimlane">
+        <div class="lane-label">Audit &amp;<br>state</div>
+        <div class="lane-body">
+          <div class="pnode pn-log"><div class="pnode-title">audit_logger.log()</div><div class="pnode-sub">Full tool chain + reasoning</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-log"><div class="pnode-title">Append audit_log.jsonl</div><div class="pnode-sub">One JSON line per invoice</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">state_manager.set_state()</div><div class="pnode-sub">status + timestamps + attempts</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-store"><div class="pnode-title">Write state.json</div><div class="pnode-sub">Update re-validation queue</div></div>
+          <div class="conn"><div class="conn-line"></div><div class="conn-arrow">&#8250;</div></div>
+          <div class="pnode pn-trigger"><div class="pnode-title">Loop 2 check</div><div class="pnode-sub">Re-validate if AP fixed it</div></div>
+        </div>
+      </div>
+
+    </div></div>
+
+    <div class="legend">
+      <div class="leg-item"><div class="leg-box" style="background:#dbeafe;border-color:#93c5fd"></div>Trigger / schedule</div>
+      <div class="leg-item"><div class="leg-box" style="background:#fef3c7;border-color:#fcd34d"></div>Check / condition</div>
+      <div class="leg-item"><div class="leg-box" style="background:#ecfdf5;border-color:#6ee7b7"></div>API call</div>
+      <div class="leg-item"><div class="leg-box" style="background:#ede9fe;border-color:#c4b5fd"></div>Claude / AI</div>
+      <div class="leg-item"><div class="leg-box" style="background:#f0fdf4;border-color:#86efac"></div>Action (pass)</div>
+      <div class="leg-item"><div class="leg-box" style="background:#fef2f2;border-color:#fca5a5"></div>Action (fail)</div>
+      <div class="leg-item"><div class="leg-box" style="background:#f5f3ff;border-color:#a5b4fc"></div>Storage / memory</div>
+      <div class="leg-item"><div class="leg-box" style="background:#f9fafb;border-color:#d1d5db"></div>Log / audit</div>
+      <div class="leg-item"><div class="leg-box" style="background:#fff1f2;border-color:#fda4af"></div>Notify / escalate</div>
+    </div>
+    </div>
+
+    <!-- ════════ SEQUENCE ════════ -->
+    <div class="scr" id="s-seq">
+    <div class="pad">
+      <div class="sh">Message sequence diagram — component interactions</div>
+      <div class="ss">Chronological view of all component-to-component calls for a single invoice processing cycle</div>
+
+      <table class="seq-tbl">
+        <thead><tr>
+          <th class="seq-num">#</th>
+          <th class="seq-comp">From</th>
+          <th class="seq-comp">To</th>
+          <th>Action / method</th>
+          <th>Input</th>
+          <th>Output</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="seq-num">1</td><td class="seq-comp">asyncio loop</td><td class="seq-comp">poller.py</td><td class="seq-action">Wake from sleep(600)</td><td class="seq-input">—</td><td class="seq-output">Loop iteration starts</td></tr>
+          <tr><td class="seq-num">2</td><td class="seq-comp">poller.py</td><td class="seq-comp">state_manager</td><td class="seq-action">is_emergency_stop()</td><td class="seq-input">agent_config.json read</td><td class="seq-output">bool</td></tr>
+          <tr><td class="seq-num">3</td><td class="seq-comp">poller.py</td><td class="seq-comp">coupa_client</td><td class="seq-action">get_token()</td><td class="seq-input">CLIENT_ID, CLIENT_SECRET</td><td class="seq-output">Bearer token (cached)</td></tr>
+          <tr><td class="seq-num">4</td><td class="seq-comp">coupa_client</td><td class="seq-comp">Coupa API</td><td class="seq-action">GET /invoices?status=draft&amp;ap-hold-code=...</td><td class="seq-input">Bearer token, limit=50</td><td class="seq-output">Invoice list JSON</td></tr>
+          <tr><td class="seq-num">5</td><td class="seq-comp">poller.py</td><td class="seq-comp">state_manager</td><td class="seq-action">get_state(invoice_id)</td><td class="seq-input">invoice_id</td><td class="seq-output">InvoiceState | None</td></tr>
+          <tr><td class="seq-num">6</td><td class="seq-comp">poller.py</td><td class="seq-comp">agent.py</td><td class="seq-action">process_invoice(invoice_id)</td><td class="seq-input">invoice_id string</td><td class="seq-output">final_action string</td></tr>
+          <tr><td class="seq-num">7</td><td class="seq-comp">agent.py</td><td class="seq-comp">Anthropic API</td><td class="seq-action">POST /v1/messages (iter 1)</td><td class="seq-input">system_prompt + tools + initial_message</td><td class="seq-output">tool_use blocks</td></tr>
+          <tr><td class="seq-num">8</td><td class="seq-comp">agent.py</td><td class="seq-comp">handlers.py</td><td class="seq-action">execute_tool("get_invoice", {id})</td><td class="seq-input">invoice_id</td><td class="seq-output">Invoice JSON string</td></tr>
+          <tr><td class="seq-num">9</td><td class="seq-comp">handlers.py</td><td class="seq-comp">Coupa API</td><td class="seq-action">GET /invoices/{id} + GET /invoice-lines</td><td class="seq-input">Bearer token, invoice_id</td><td class="seq-output">Full invoice + lines JSON</td></tr>
+          <tr><td class="seq-num">10</td><td class="seq-comp">agent.py</td><td class="seq-comp">handlers.py</td><td class="seq-action">execute_tool("get_vendor_history", {vendor_id})</td><td class="seq-input">vendor_id</td><td class="seq-output">Vendor patterns JSON string</td></tr>
+          <tr><td class="seq-num">11</td><td class="seq-comp">handlers.py</td><td class="seq-comp">memory/vendor_patterns.json</td><td class="seq-action">Read vendor entry</td><td class="seq-input">vendor_id lookup</td><td class="seq-output">History + patterns dict</td></tr>
+          <tr><td class="seq-num">12</td><td class="seq-comp">agent.py</td><td class="seq-comp">Anthropic API</td><td class="seq-action">POST /v1/messages (iter 2)</td><td class="seq-input">messages + tool_results appended</td><td class="seq-output">tool_use: validate_tax, validate_wht</td></tr>
+          <tr><td class="seq-num">13</td><td class="seq-comp">handlers.py</td><td class="seq-comp">tax_validator.py</td><td class="seq-action">validate(invoice, lines)</td><td class="seq-input">Normalised line dicts</td><td class="seq-output">ValidationResult</td></tr>
+          <tr><td class="seq-num">14</td><td class="seq-comp">handlers.py</td><td class="seq-comp">wht_validator.py</td><td class="seq-action">validate(invoice)</td><td class="seq-input">Raw invoice JSON</td><td class="seq-output">ValidationResult</td></tr>
+          <tr><td class="seq-num">15</td><td class="seq-comp">agent.py</td><td class="seq-comp">Anthropic API</td><td class="seq-action">POST /v1/messages (iter 3)</td><td class="seq-input">All results in messages[]</td><td class="seq-output">tool_use: post_comment + action tool</td></tr>
+          <tr><td class="seq-num">16</td><td class="seq-comp">handlers.py</td><td class="seq-comp">Coupa API</td><td class="seq-action">POST /invoices/{id}/comments</td><td class="seq-input">Claude's comment text</td><td class="seq-output">Comment ID, 201 Created</td></tr>
+          <tr><td class="seq-num">17</td><td class="seq-comp">handlers.py</td><td class="seq-comp">Coupa API</td><td class="seq-action">PUT /invoices/{id} (hold or submit)</td><td class="seq-input">Custom fields update</td><td class="seq-output">200 OK</td></tr>
+          <tr><td class="seq-num">18</td><td class="seq-comp">agent.py</td><td class="seq-comp">Anthropic API</td><td class="seq-action">POST /v1/messages (iter 4)</td><td class="seq-input">Action results in messages[]</td><td class="seq-output">tool_use: store_reflection</td></tr>
+          <tr><td class="seq-num">19</td><td class="seq-comp">handlers.py</td><td class="seq-comp">vendor_patterns.json</td><td class="seq-action">Upsert vendor entry</td><td class="seq-input">Vendor ID + reflection data</td><td class="seq-output">Updated JSON file</td></tr>
+          <tr><td class="seq-num">20</td><td class="seq-comp">agent.py</td><td class="seq-comp">Anthropic API</td><td class="seq-action">POST /v1/messages (iter 5)</td><td class="seq-input">Reflection result</td><td class="seq-output">stop_reason: end_turn</td></tr>
+          <tr><td class="seq-num">21</td><td class="seq-comp">agent.py</td><td class="seq-comp">audit_logger.py</td><td class="seq-action">log(full_audit_entry)</td><td class="seq-input">All tool calls + Claude reasoning</td><td class="seq-output">Appended to audit_log.jsonl</td></tr>
+          <tr><td class="seq-num">22</td><td class="seq-comp">agent.py</td><td class="seq-comp">state_manager</td><td class="seq-action">set_state(invoice_id, final_state)</td><td class="seq-input">Status + timestamps + attempts</td><td class="seq-output">state.json updated</td></tr>
+        </tbody>
+      </table>
+
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 14px;font-size:12px;color:#166534;line-height:1.7">
+        <strong>Typical invoice:</strong> 5 Claude iterations, ~12 tool calls, ~22 total component interactions. Clean vendor with no issues: 3 iterations, ~8 tool calls. Escalation scenario: 6 iterations, ~14 tool calls.
+      </div>
+    </div>
+    </div>
+
+    <!-- ════════ DATA FLOWS ════════ -->
+    <div class="scr" id="s-data">
+    <div class="pad">
+      <div class="sh">Data flow specifications — key data structures</div>
+      <div class="ss">Input/output schemas for each major component boundary</div>
+
+      <div class="df-grid">
+        <div class="df-card">
+          <div class="df-head" style="background:#ecfdf5;color:#065f46"><span>&#9729;</span> Coupa invoice response (key fields)</div>
+          <div style="padding:10px 12px">
+            <div class="df-field"><span class="df-key">id</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">invoice-number</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">invoice-date</span><span class="df-type t-str">ISO8601</span></div>
+            <div class="df-field"><span class="df-key">gross-total</span><span class="df-type t-num">float</span></div>
+            <div class="df-field"><span class="df-key">tax-amount</span><span class="df-type t-num">float</span></div>
+            <div class="df-field"><span class="df-key">currency.code</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">supplier.id</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">supplier.name</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">supplier.number</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">purchase-order.po-number</span><span class="df-type t-str">string | null</span></div>
+            <div class="df-field"><span class="df-key">custom-fields.withholding-tax</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">withholding-tax-lines[].code</span><span class="df-type t-list">string[]</span></div>
+            <div class="df-field"><span class="df-key">invoice-lines[*]</span><span class="df-type t-list">Line[]</span></div>
+          </div>
+        </div>
+
+        <div class="df-card">
+          <div class="df-head" style="background:#ecfdf5;color:#065f46"><span>&#9729;</span> Coupa invoice line (key fields)</div>
+          <div style="padding:10px 12px">
+            <div class="df-field"><span class="df-key">id</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">line-num</span><span class="df-type t-num">int</span></div>
+            <div class="df-field"><span class="df-key">total</span><span class="df-type t-num">float</span></div>
+            <div class="df-field"><span class="df-key">tax-amount</span><span class="df-type t-num">float</span></div>
+            <div class="df-field"><span class="df-key">tax-rate</span><span class="df-type t-num">float (percentage)</span></div>
+            <div class="df-field"><span class="df-key">tax-code.code</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">tax-code.percentage</span><span class="df-type t-num">float (master rate)</span></div>
+            <div class="df-field"><span class="df-key">unit-price</span><span class="df-type t-num">float</span></div>
+            <div class="df-field"><span class="df-key">quantity</span><span class="df-type t-num">float</span></div>
+            <div class="df-field"><span class="df-key">description</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">account.code</span><span class="df-type t-str">GL code</span></div>
+            <div class="df-field"><span class="df-key">withholding-tax-lines[].code</span><span class="df-type t-list">string[]</span></div>
+            <div class="df-field"><span class="df-key">order-line-id</span><span class="df-type t-str">string | null</span></div>
+          </div>
+        </div>
+
+        <div class="df-card">
+          <div class="df-head" style="background:#ede9fe;color:#4c1d95"><span>&#129504;</span> ValidationResult (Pydantic model)</div>
+          <div style="padding:10px 12px">
+            <div class="df-field"><span class="df-key">rule</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">status</span><span class="df-type t-str">"passed"|"failed"|"warning"</span></div>
+            <div class="df-field"><span class="df-key">summary</span><span class="df-type t-str">string (human-readable)</span></div>
+            <div class="df-field"><span class="df-key">details</span><span class="df-type t-list">list[str] (per-line findings)</span></div>
+            <div class="df-field"><span class="df-key">passed</span><span class="df-type t-bool">bool</span></div>
+          </div>
+          <div style="padding:0 12px 10px">
+            <div class="df-head" style="background:#f5f3ff;color:#4c1d95;margin-top:10px;padding:6px 10px;border-radius:4px">Audit log entry schema</div>
+            <div class="df-field"><span class="df-key">timestamp</span><span class="df-type t-str">ISO8601 UTC</span></div>
+            <div class="df-field"><span class="df-key">invoice_id</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">agent_type</span><span class="df-type t-str">"true_agentic_claude_tool_use"</span></div>
+            <div class="df-field"><span class="df-key">action_taken</span><span class="df-type t-str">"submit"|"hold"|"escalate"</span></div>
+            <div class="df-field"><span class="df-key">tool_calls</span><span class="df-type t-list">list[{tool, input}]</span></div>
+            <div class="df-field"><span class="df-key">total_iterations</span><span class="df-type t-num">int</span></div>
+            <div class="df-field"><span class="df-key">claude_reasoning</span><span class="df-type t-str">string (full text)</span></div>
+            <div class="df-field"><span class="df-key">attempt</span><span class="df-type t-num">int</span></div>
+          </div>
+        </div>
+
+        <div class="df-card">
+          <div class="df-head" style="background:#eff6ff;color:#1e40af"><span>&#128451;</span> Vendor patterns memory schema</div>
+          <div style="padding:10px 12px">
+            <div class="df-field"><span class="df-key">vendors.{vendor_id}.vendor_name</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">...total_invoices_processed</span><span class="df-type t-num">int</span></div>
+            <div class="df-field"><span class="df-key">...total_failures</span><span class="df-type t-num">int</span></div>
+            <div class="df-field"><span class="df-key">...failure_rate_percent</span><span class="df-type t-num">float</span></div>
+            <div class="df-field"><span class="df-key">...last_action</span><span class="df-type t-str">"submit"|"hold"|"escalate"</span></div>
+            <div class="df-field"><span class="df-key">...last_processed_at</span><span class="df-type t-str">ISO8601</span></div>
+            <div class="df-field"><span class="df-key">...patterns</span><span class="df-type t-list">list[str]</span></div>
+            <div class="df-field"><span class="df-key">...rule_suggestions</span><span class="df-type t-list">list[str]</span></div>
+            <div class="df-field"><span class="df-key">...history[].invoice_id</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">...history[].date</span><span class="df-type t-str">ISO8601</span></div>
+            <div class="df-field"><span class="df-key">...history[].action</span><span class="df-type t-str">string</span></div>
+            <div class="df-field"><span class="df-key">...history[].pattern_detected</span><span class="df-type t-str">string</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:8px">Field extraction — normalised line dict (tax_validator.py input)</div>
+      <div class="code">line_data = {
+    <span class="st">"invoice_id"</span>:             <span class="fn">str</span>(inv[<span class="st">"id"</span>]),
+    <span class="st">"invoice_number"</span>:          <span class="fn">str</span>(inv[<span class="st">"invoice-number"</span>]),
+    <span class="st">"supplier_name"</span>:           <span class="fn">str</span>(inv[<span class="st">"supplier"</span>][<span class="st">"name"</span>]),
+    <span class="st">"supplier_number"</span>:         <span class="fn">str</span>(inv[<span class="st">"supplier"</span>][<span class="st">"number"</span>]),
+    <span class="st">"po_number"</span>:               <span class="fn">str</span>(inv.get(<span class="st">"purchase-order"</span>, {}).get(<span class="st">"po-number"</span>, <span class="st">"N/A"</span>)),
+    <span class="st">"total_amount"</span>:            <span class="fn">float</span>(inv.get(<span class="st">"gross-total"</span>, <span class="nu">0</span>)),
+    <span class="st">"currency"</span>:                <span class="fn">str</span>(inv[<span class="st">"currency"</span>][<span class="st">"code"</span>]),
+    <span class="st">"line_num"</span>:                <span class="fn">int</span>(line[<span class="st">"line-num"</span>]),
+    <span class="st">"line_total"</span>:              <span class="fn">float</span>(line.get(<span class="st">"total"</span>, <span class="nu">0</span>)),
+    <span class="st">"line_tax_amount"</span>:         <span class="fn">float</span>(line.get(<span class="st">"tax-amount"</span>, <span class="nu">0</span>)),
+    <span class="st">"line_tax_rate"</span>:           <span class="fn">float</span>(line.get(<span class="st">"tax-rate"</span>, <span class="nu">0</span>)),
+    <span class="st">"line_tax_code"</span>:           <span class="fn">str</span>(line.get(<span class="st">"tax-code"</span>, {}).get(<span class="st">"code"</span>, <span class="st">""</span>)),
+    <span class="st">"line_tax_rate_expected"</span>:  <span class="fn">float</span>(line.get(<span class="st">"tax-code"</span>, {}).get(<span class="st">"percentage"</span>, <span class="nu">0</span>)),
+}</div>
+    </div>
+    </div>
+
+    <!-- ════════ API CONTRACTS ════════ -->
+    <div class="scr" id="s-api">
+    <div class="pad">
+      <div class="sh">API contracts — request &amp; response specifications</div>
+      <div class="ss">All external API calls made by the agent with full request/response contracts</div>
+
+      <div class="card">
+        <div class="ct"><span class="badge bb">GET</span> Coupa — fetch invoice list</div>
+        <div class="code"><span class="cm"># Request</span>
+GET https://bcg.coupahost.com/api/invoices
+    ?status=draft
+    &filter=default_invoices_filter
+    &custom_fields[ap-hold-code]=Pending+Agent+Review
+    &limit=50
+
+Headers:
+    Authorization: Bearer {token}
+    Accept:         application/json
+
+<span class="cm"># Response 200</span>
+[
+  {
+    <span class="st">"id"</span>: <span class="st">"452"</span>,
+    <span class="st">"invoice-number"</span>: <span class="st">"INV-2024-0452"</span>,
+    <span class="st">"status"</span>: <span class="st">"draft"</span>,
+    <span class="st">"gross-total"</span>: <span class="nu">85000.00</span>,
+    <span class="st">"supplier"</span>: { <span class="st">"id"</span>: <span class="st">"123"</span>, <span class="st">"name"</span>: <span class="st">"EY Israel Ltd"</span> },
+    <span class="st">"custom-fields"</span>: { <span class="st">"ap-hold-code"</span>: <span class="st">"Pending Agent Review"</span> }
+  }
+]</div>
+      </div>
+
+      <div class="card">
+        <div class="ct"><span class="badge bg">POST</span> Coupa — post comment</div>
+        <div class="code"><span class="cm"># Request</span>
+POST https://bcg.coupahost.com/api/invoices/{id}/comments
+
+Headers:
+    Authorization: Bearer {token}
+    Content-Type:  application/json
+    Accept:        application/json
+
+Body:
+{
+  <span class="st">"commentable-id"</span>:   452,
+  <span class="st">"commentable-type"</span>: <span class="st">"InvoiceHeader"</span>,
+  <span class="st">"to-supplier"</span>:      <span class="kw">false</span>,
+  <span class="st">"comments"</span>:         <span class="st">"[Claude's contextual comment text]"</span>
+}
+
+<span class="cm"># Response 201</span>
+{ <span class="st">"id"</span>: <span class="nu">789</span>, <span class="st">"comments"</span>: <span class="st">"..."</span>, <span class="st">"created-at"</span>: <span class="st">"2026-05-15T14:30:00Z"</span> }
+
+<span class="cm"># Retry policy: 3 attempts with 5s delay on non-201
+# Fallback: email SUPPORT_EMAIL with full comment text</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ct"><span class="badge ba">PUT</span> Coupa — update invoice (hold)</div>
+        <div class="code"><span class="cm"># Request — set on hold</span>
+PUT https://bcg.coupahost.com/api/invoices/{id}
+
+Body:
+{
+  <span class="st">"custom-fields"</span>: {
+    <span class="st">"tax-engine-error"</span>: <span class="st">"Verified By Agent-Inconsistencies identified- AP to review"</span>,
+    <span class="st">"ap-hold-code"</span>:     <span class="st">"Agent Review Completed- Pending AP Action"</span>
+  }
+}
+
+<span class="cm"># Request — clear hold (on pass)</span>
+{
+  <span class="st">"custom-fields"</span>: {
+    <span class="st">"tax-engine-error"</span>: <span class="st">"Verified By Agent- OK To Submit"</span>,
+    <span class="st">"ap-hold-code"</span>:     <span class="st">""</span>
+  }
+}
+
+<span class="cm"># Response 200: { "id": 452, "status": "draft", "custom-fields": {...} }</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ct"><span class="badge bp">POST</span> Anthropic — tool-use API call</div>
+        <div class="code"><span class="cm"># Request</span>
+POST https://api.anthropic.com/v1/messages
+
+Headers:
+    x-api-key:         {ANTHROPIC_API_KEY}
+    anthropic-version: <span class="st">"2023-06-01"</span>
+    Content-Type:      application/json
+
+Body:
+{
+  <span class="st">"model"</span>:      <span class="st">"claude-sonnet-4-20250514"</span>,
+  <span class="st">"max_tokens"</span>: <span class="nu">4096</span>,
+  <span class="st">"system"</span>:     <span class="st">"[contents of system_prompt.txt]"</span>,
+  <span class="st">"tools"</span>:      [ <span class="cm">/* 12 tool definitions */</span> ],
+  <span class="st">"messages"</span>:   [ <span class="cm">/* full growing history */</span> ]
+}
+
+<span class="cm"># Response — tool_use stop_reason</span>
+{
+  <span class="st">"stop_reason"</span>: <span class="st">"tool_use"</span>,
+  <span class="st">"content"</span>: [
+    { <span class="st">"type"</span>: <span class="st">"text"</span>, <span class="st">"text"</span>: <span class="st">"[Claude's reasoning text]"</span> },
+    { <span class="st">"type"</span>: <span class="st">"tool_use"</span>, <span class="st">"id"</span>: <span class="st">"toolu_abc"</span>,
+      <span class="st">"name"</span>: <span class="st">"validate_tax"</span>,
+      <span class="st">"input"</span>: { <span class="st">"invoice_id"</span>: <span class="st">"452"</span> } }
+  ]
+}
+
+<span class="cm"># Response — end_turn (Claude finished)</span>
+{ <span class="st">"stop_reason"</span>: <span class="st">"end_turn"</span>, <span class="st">"content"</span>: [...] }</div>
+      </div>
+
+      <div class="card">
+        <div class="ct"><span class="badge bb">POST</span> OAuth2 — token request</div>
+        <div class="code"><span class="cm"># Request</span>
+POST https://bcg.coupahost.com/oauth2/token
+
+Body (form-encoded):
+    grant_type=client_credentials
+    &client_id={COUPA_CLIENT_ID}
+    &client_secret={COUPA_CLIENT_SECRET}
+
+<span class="cm"># Response 200</span>
+{
+  <span class="st">"access_token"</span>: <span class="st">"eyJ..."</span>,
+  <span class="st">"token_type"</span>:   <span class="st">"Bearer"</span>,
+  <span class="st">"expires_in"</span>:   <span class="nu">3600</span>
+}
+
+<span class="cm"># Cache strategy: store token + (now + expires_in - 60s)
+# Refresh when: datetime.now() >= token_expiry</span></div>
+      </div>
+    </div>
+    </div>
+
+    <!-- ════════ ERROR HANDLING ════════ -->
+    <div class="scr" id="s-err">
+    <div class="pad">
+      <div class="sh">Error handling matrix</div>
+      <div class="ss">Every failure mode, detection method, retry strategy, and fallback action</div>
+
+      <table class="err-tbl">
+        <thead><tr>
+          <th>Error condition</th>
+          <th>Where detected</th>
+          <th>HTTP / exception</th>
+          <th>Retry strategy</th>
+          <th>Fallback action</th>
+          <th>Invoice state</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Coupa API unreachable</td><td>coupa_client.get_invoices()</td><td>httpx.ConnectError</td><td>3&times; with 5s delay</td><td>Log error, skip cycle, alert support</td><td>Unchanged — not touched</td></tr>
+          <tr><td>OAuth2 token request fails</td><td>coupa_client.get_token()</td><td>HTTP 401/500</td><td>3&times; with 10s delay</td><td>Halt poll cycle, log critical</td><td>Unchanged</td></tr>
+          <tr><td>OAuth2 token expired mid-cycle</td><td>Any API call returns 401</td><td>HTTP 401</td><td>Re-fetch token once, retry call</td><td>If still 401: log + skip invoice</td><td>Unchanged</td></tr>
+          <tr><td>Invoice not found</td><td>coupa_client.get_invoice()</td><td>HTTP 404</td><td>No retry</td><td>Log warning, remove from queue</td><td>Removed from state</td></tr>
+          <tr><td>Comment POST fails</td><td>coupa_client.post_comment()</td><td>HTTP 4xx/5xx</td><td>3&times; with 5s delay</td><td>Send fallback email with full comment text to SUPPORT_EMAIL</td><td>Held — comment not posted</td></tr>
+          <tr><td>Invoice PUT (hold/submit) fails</td><td>coupa_client.set_on_hold()</td><td>HTTP 4xx/5xx</td><td>3&times; with 5s delay</td><td>Log error + alert support — invoice left in current state</td><td>May be inconsistent</td></tr>
+          <tr><td>Anthropic API unreachable</td><td>agent.process_invoice()</td><td>httpx.ConnectError</td><td>3&times; with 10s delay</td><td>Escalate invoice with reason "AI unavailable" to support</td><td>On hold — escalated</td></tr>
+          <tr><td>Anthropic rate limit hit</td><td>POST /v1/messages</td><td>HTTP 429</td><td>Exponential backoff: 30s, 60s, 120s</td><td>If still failing: defer invoice to next poll cycle</td><td>Unchanged — retry next cycle</td></tr>
+          <tr><td>Claude max iterations reached</td><td>agent.py loop counter</td><td>iteration &gt;= 20</td><td>No retry — safety limit</td><td>Escalate to SUPPORT_EMAIL with full message history</td><td>On hold — escalated</td></tr>
+          <tr><td>Tool handler throws exception</td><td>execute_tool() try/catch</td><td>Any Python exception</td><td>No retry — result returned as error string to Claude</td><td>Claude receives error string and decides next action</td><td>Claude decides</td></tr>
+          <tr><td>vendor_patterns.json missing</td><td>handle_get_vendor_history()</td><td>FileNotFoundError</td><td>No retry</td><td>Create empty file, return "No prior history" to Claude</td><td>Unchanged — Claude continues</td></tr>
+          <tr><td>state.json corrupt / unreadable</td><td>state_manager.get_state()</td><td>json.JSONDecodeError</td><td>No retry</td><td>Log error, treat invoice as new (attempt=1)</td><td>Reset to new</td></tr>
+          <tr><td>Duplicate invoice detected</td><td>handle_check_duplicate()</td><td>Non-empty search result</td><td>No retry</td><td>Return duplicate details to Claude — Claude decides action</td><td>Claude decides</td></tr>
+          <tr><td>SMTP email send fails</td><td>notifier.send_escalation()</td><td>smtplib.SMTPException</td><td>3&times; with 30s delay</td><td>Log critical — escalation may be missed</td><td>Invoice held but email not sent</td></tr>
+          <tr><td>Emergency stop activated</td><td>poller.py loop check</td><td>Flag = true in config</td><td>No retry</td><td>Skip cycle, sleep 60s, check again</td><td>All unchanged</td></tr>
+        </tbody>
+      </table>
+
+      <div class="row2">
+        <div class="card">
+          <div class="ct">&#128260; Retry implementation</div>
+          <div class="code"><span class="kw">async def</span> <span class="fn">post_comment_with_retry</span>(
+    self, invoice_id: <span class="cl">str</span>, comment: <span class="cl">str</span>
+) -> <span class="cl">bool</span>:
+    <span class="kw">for</span> attempt <span class="kw">in</span> <span class="fn">range</span>(<span class="nu">3</span>):
+        <span class="kw">try</span>:
+            resp = <span class="kw">await</span> self.client.<span class="fn">post</span>(
+                <span class="st">f"/invoices/{invoice_id}/comments"</span>,
+                json={...}
+            )
+            <span class="kw">if</span> resp.status_code == <span class="nu">201</span>:
+                <span class="kw">return</span> <span class="kw">True</span>
+        <span class="kw">except</span> <span class="cl">Exception</span> <span class="kw">as</span> e:
+            logger.<span class="fn">warning</span>(<span class="st">f"Attempt {attempt+1} failed: {e}"</span>)
+        <span class="kw">await</span> asyncio.<span class="fn">sleep</span>(<span class="nu">5</span>)
+
+    <span class="cm"># All 3 retries failed — email fallback</span>
+    <span class="kw">await</span> notifier.<span class="fn">send_fallback_email</span>(invoice_id, comment)
+    <span class="kw">return</span> <span class="kw">False</span></div>
+        </div>
+        <div class="card">
+          <div class="ct">&#9888; Never-silent failure policy</div>
+          <div style="font-size:12px;color:#4b5563;line-height:1.8">
+            Every error must surface somewhere:<br><br>
+            1. <strong style="color:#111827">First:</strong> retry the operation<br>
+            2. <strong style="color:#111827">On failure:</strong> email fallback to SUPPORT_EMAIL<br>
+            3. <strong style="color:#111827">Always:</strong> log to agent.log with full traceback<br>
+            4. <strong style="color:#111827">Always:</strong> write to audit_log.jsonl<br>
+            5. <strong style="color:#111827">Always:</strong> update state.json<br><br>
+            No invoice should be left in an unknown state. If the agent cannot determine what happened, it escalates rather than silently continuing.
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- ════════ STATE MACHINE ════════ -->
+    <div class="scr" id="s-state">
+    <div class="pad">
+      <div class="sh">Invoice state machine</div>
+      <div class="ss">All possible states an invoice can be in, valid transitions, and what triggers each</div>
+
+      <div style="background:var(--color-bg,#fff);border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:16px;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:700px">
+          <thead>
+            <tr style="background:#f9fafb">
+              <th style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em">From state</th>
+              <th style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em">To state</th>
+              <th style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em">Trigger</th>
+              <th style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em">Actions taken</th>
+              <th style="padding:8px 12px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em">Coupa ap-hold-code</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #f3f4f6">
+              <td style="padding:8px 12px"><span style="background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">new</span></td>
+              <td style="padding:8px 12px"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">processing</span></td>
+              <td style="padding:8px 12px;color:#4b5563">Poller finds invoice with ap-hold-code = "Pending Agent Review"</td>
+              <td style="padding:8px 12px;color:#4b5563">agent.process_invoice() called · state written</td>
+              <td style="padding:8px 12px;font-family:monospace;color:#374151;font-size:10px">Pending Agent Review</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6;background:#f0fdf4">
+              <td style="padding:8px 12px"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">processing</span></td>
+              <td style="padding:8px 12px"><span style="background:#dcfce7;color:#166534;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">passed</span></td>
+              <td style="padding:8px 12px;color:#4b5563">Claude decides submit after all validations pass</td>
+              <td style="padding:8px 12px;color:#4b5563">post_comment(pass) · PUT invoice (clear hold) · audit logged</td>
+              <td style="padding:8px 12px;font-family:monospace;color:#374151;font-size:10px">""  (cleared)</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6;background:#fff8f8">
+              <td style="padding:8px 12px"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">processing</span></td>
+              <td style="padding:8px 12px"><span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">failed</span></td>
+              <td style="padding:8px 12px;color:#4b5563">Claude decides hold after validation failures</td>
+              <td style="padding:8px 12px;color:#4b5563">post_comment(fail) · PUT invoice (set hold) · add to re-validation queue</td>
+              <td style="padding:8px 12px;font-family:monospace;color:#374151;font-size:10px">Agent Review Completed- Pending AP Action</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6;background:#fff7ed">
+              <td style="padding:8px 12px"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">processing</span></td>
+              <td style="padding:8px 12px"><span style="background:#fff7ed;color:#9a3412;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">escalated</span></td>
+              <td style="padding:8px 12px;color:#4b5563">Claude decides escalate (3rd failure, large amount, novel issue)</td>
+              <td style="padding:8px 12px;color:#4b5563">post_comment(escalate) · PUT hold · email AP manager · audit logged</td>
+              <td style="padding:8px 12px;font-family:monospace;color:#374151;font-size:10px">Agent Review Completed- Pending AP Action</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6">
+              <td style="padding:8px 12px"><span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">failed</span></td>
+              <td style="padding:8px 12px"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">revalidating</span></td>
+              <td style="padding:8px 12px;color:#4b5563">Loop 2 detects invoice.updated-at &gt; last_validated_at</td>
+              <td style="padding:8px 12px;color:#4b5563">AP team fixed invoice in Coupa · agent re-runs full validation</td>
+              <td style="padding:8px 12px;font-family:monospace;color:#374151;font-size:10px">Agent Review Completed- Pending AP Action</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6;background:#f0fdf4">
+              <td style="padding:8px 12px"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">revalidating</span></td>
+              <td style="padding:8px 12px"><span style="background:#dcfce7;color:#166534;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">passed</span></td>
+              <td style="padding:8px 12px;color:#4b5563">Re-validation passes all checks</td>
+              <td style="padding:8px 12px;color:#4b5563">post_comment(pass) · clear hold · remove from queue · submit</td>
+              <td style="padding:8px 12px;font-family:monospace;color:#374151;font-size:10px">""  (cleared)</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6;background:#fff8f8">
+              <td style="padding:8px 12px"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">revalidating</span></td>
+              <td style="padding:8px 12px"><span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">failed</span></td>
+              <td style="padding:8px 12px;color:#4b5563">Re-validation still fails</td>
+              <td style="padding:8px 12px;color:#4b5563">post_comment(new errors) · remain on hold · update queue</td>
+              <td style="padding:8px 12px;font-family:monospace;color:#374151;font-size:10px">Agent Review Completed- Pending AP Action</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px"><span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">failed</span> <span style="color:#9ca3af;font-size:10px">or</span> <span style="background:#fff7ed;color:#9a3412;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">escalated</span></td>
+              <td style="padding:8px 12px"><span style="background:#f3f4f6;color:#374151;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600">cancelled</span></td>
+              <td style="padding:8px 12px;color:#4b5563">Invoice cancelled in Coupa by AP team</td>
+              <td style="padding:8px 12px;color:#4b5563">Detected on next Loop 2 check · removed from queue</td>
+              <td style="padding:8px 12px;font-family:monospace;color:#374151;font-size:10px">N/A (cancelled)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="row2">
+        <div class="card">
+          <div class="ct">&#128196; state.json structure per invoice</div>
+          <div class="code">{
+  <span class="st">"invoice_id"</span>:           <span class="st">"452"</span>,
+  <span class="st">"invoice_number"</span>:        <span class="st">"INV-2024-0452"</span>,
+  <span class="st">"supplier_name"</span>:         <span class="st">"EY Israel Ltd"</span>,
+  <span class="st">"status"</span>:                <span class="st">"failed"</span>,
+  <span class="st">"last_validated_at"</span>:     <span class="st">"2026-05-15T14:30:00Z"</span>,
+  <span class="st">"last_coupa_updated_at"</span>: <span class="st">"2026-05-15T14:30:00Z"</span>,
+  <span class="st">"validation_attempts"</span>:   <span class="nu">2</span>,
+  <span class="st">"failed_checks"</span>:         [<span class="st">"WHT Validation"</span>],
+  <span class="st">"tool_calls_last_run"</span>:   [<span class="st">"get_invoice"</span>, <span class="st">"validate_wht"</span>, ...],
+  <span class="st">"comment_posted"</span>:        <span class="kw">true</span>,
+  <span class="st">"in_revalidation_queue"</span>: <span class="kw">true</span>
+}</div>
+        </div>
+        <div class="card">
+          <div class="ct">&#128260; Re-validation trigger logic (Loop 2)</div>
+          <div class="code"><span class="kw">async def</span> <span class="fn">revalidation_loop</span>():
+    <span class="kw">await</span> asyncio.<span class="fn">sleep</span>(<span class="nu">300</span>)  <span class="cm"># offset 5 min</span>
+    <span class="kw">while</span> <span class="kw">True</span>:
+        queue = state_manager.<span class="fn">get_revalidation_queue</span>()
+        <span class="kw">for</span> s <span class="kw">in</span> queue:
+            inv = <span class="kw">await</span> coupa_client.<span class="fn">get_invoice</span>(s.invoice_id)
+            coupa_updated = <span class="fn">parse_dt</span>(inv[<span class="st">"updated-at"</span>])
+
+            <span class="cm"># Re-validate only if AP made changes</span>
+            <span class="kw">if</span> coupa_updated > s.last_validated_at:
+                logger.<span class="fn">info</span>(<span class="st">f"Re-validating {s.invoice_id}"</span>)
+                <span class="kw">await</span> agent.<span class="fn">process_invoice</span>(s.invoice_id)
+
+            <span class="cm"># Remove if AP cancelled it</span>
+            <span class="kw">if</span> inv[<span class="st">"status"</span>] == <span class="st">"cancelled"</span>:
+                state_manager.<span class="fn">remove_from_queue</span>(s.invoice_id)
+
+        <span class="kw">await</span> asyncio.<span class="fn">sleep</span>(<span class="nu">600</span>)</div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+  </div>
+  <div class="pf">Low-Level Technical Process Map &nbsp;&middot;&nbsp; Coupa Invoice Validation Agent v3.0 &nbsp;&middot;&nbsp; BCG Internal &nbsp;&middot;&nbsp; May 2026</div>
+</div>
+
+<script>
+function sw(n,b){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('s-'+n).classList.add('on');
+  b.classList.add('on');
+}
+</script>
+</body>
+</html>

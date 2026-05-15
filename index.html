@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coupa Invoice Validation Agent — Stakeholder Review Hub</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;min-height:100vh;color:#111827}
+
+/* HERO */
+.hero{background:#0a1f3c;padding:48px 24px 40px;text-align:center;position:relative;overflow:hidden}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 14px;border-radius:20px;background:rgba(125,201,125,.15);color:#7dc97d;border:1px solid rgba(125,201,125,.3);margin-bottom:16px;font-weight:500}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:#7dc97d;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-size:28px;font-weight:600;color:#fff;margin-bottom:10px;line-height:1.3}
+.hero h1 span{color:#7aafd4}
+.hero p{font-size:14px;color:#8aaac8;max-width:580px;margin:0 auto 10px;line-height:1.75}
+.agentic-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 16px;border-radius:20px;background:rgba(139,92,246,.2);color:#c4b5fd;border:1px solid rgba(139,92,246,.3);margin-bottom:18px;font-weight:500}
+.hero-meta{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;font-size:12px;color:#5a7a9a}
+
+/* OUTER */
+.outer{max-width:900px;margin:0 auto;padding:36px 20px}
+.slbl{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.slbl::after{content:'';flex:1;height:1px;background:#e5e7eb}
+
+/* AGENTIC CALLOUT */
+.agentic-callout{background:#f5f3ff;border:1px solid #c4b5fd;border-radius:12px;padding:20px 24px;margin-bottom:36px}
+.ac-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.ac-badge{background:#5b21b6;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:10px}
+.ac-title{font-size:15px;font-weight:600;color:#3730a3}
+.ac-body{font-size:13px;color:#4338ca;line-height:1.75;margin-bottom:12px}
+.ac-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:580px){.ac-grid{grid-template-columns:1fr}}
+.ac-item{background:#ede9fe;border-radius:8px;padding:10px 12px;font-size:12px;color:#3730a3}
+.ac-item-title{font-weight:600;margin-bottom:3px;font-size:12px}
+.ac-item-desc{color:#4338ca;font-size:11px;line-height:1.55}
+
+/* CARDS */
+.cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:36px}
+@media(max-width:620px){.cards-grid{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;transition:border-color .2s,transform .15s;text-decoration:none;display:block}
+.card:hover{border-color:#93c5fd;transform:translateY(-2px)}
+.card.featured{border:2px solid #3b82f6}
+.card.agentic-card{border:2px solid #8b5cf6}
+.card-top{padding:20px 20px 14px}
+.card-icon-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.card-icon.blue{background:#dbeafe}
+.card-icon.green{background:#dcfce7}
+.card-icon.amber{background:#fef3c7}
+.card-icon.purple{background:#ede9fe}
+.card-icon.teal{background:#d1fae5}
+.cbadge{font-size:10px;padding:3px 10px;border-radius:10px;font-weight:600;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.cbadge-featured{background:#3b82f6;color:#fff;font-size:10px;padding:3px 10px;border-radius:10px;font-weight:600}
+.cbadge-business{background:#dbeafe;color:#1e40af;font-size:10px;padding:3px 10px;border-radius:10px;font-weight:600}
+.cbadge-ops{background:#dcfce7;color:#166534;font-size:10px;padding:3px 10px;border-radius:10px;font-weight:600}
+.cbadge-agentic{background:#ede9fe;color:#5b21b6;font-size:10px;padding:3px 10px;border-radius:10px;font-weight:600}
+.cbadge-new{background:#5b21b6;color:#fff;font-size:10px;padding:3px 10px;border-radius:10px;font-weight:700}
+.cbadge-tech{background:#fef3c7;color:#92400e;font-size:10px;padding:3px 10px;border-radius:10px;font-weight:600}
+.card-title{font-size:15px;font-weight:600;color:#111827;margin-bottom:6px}
+.card-desc{font-size:12px;color:#6b7280;line-height:1.7}
+.card-features{display:flex;flex-direction:column;gap:5px;margin-top:10px;font-size:11px;color:#4b5563}
+.card-features span{display:flex;align-items:center;gap:5px}
+.card-bottom{border-top:1px solid #f3f4f6;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;background:#f9fafb}
+.card-tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 8px;border-radius:4px;background:#f3f4f6;color:#6b7280;font-weight:500}
+.card-link{font-size:12px;font-weight:600;color:#3b82f6;white-space:nowrap}
+.card-link::after{content:'→'}
+
+/* JOURNEY */
+.journey{display:flex;margin-bottom:36px;overflow-x:auto}
+.jstep{flex:1;min-width:100px;padding:14px 10px;background:#fff;border:1px solid #e5e7eb;text-align:center;font-size:11px}
+.jstep+.jstep{border-left:none}
+.jstep:first-child{border-radius:8px 0 0 8px}
+.jstep:last-child{border-radius:0 8px 8px 0}
+.jstep.active{background:#f5f3ff;border-color:#c4b5fd}
+.jstep-num{width:24px;height:24px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#6b7280;margin:0 auto 6px}
+.jstep.active .jstep-num{background:#ede9fe;color:#5b21b6}
+.jstep-lbl{color:#374151;font-weight:600;margin-bottom:3px;font-size:11px}
+.jstep-sub{color:#9ca3af;font-size:10px;line-height:1.4}
+.jstep.active .jstep-lbl{color:#5b21b6}
+
+/* STATUS */
+.status-bar{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 24px;margin-bottom:36px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.si{display:flex;align-items:center;gap:8px;font-size:12px}
+.sd{width:8px;height:8px;border-radius:50%}
+.sd.g{background:#16a34a}.sd.a{background:#d97706}.sd.gr{background:#9ca3af}.sd.p{background:#8b5cf6}
+.sl2{color:#374151;font-weight:500}
+.ss{color:#9ca3af;font-size:11px;margin-top:1px}
+
+/* QUICK REF */
+.qr{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:36px}
+.qr-grid{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #e5e7eb}
+@media(max-width:580px){.qr-grid{grid-template-columns:1fr}}
+.qr-col{padding:16px 20px}
+.qr-col+.qr-col{border-left:1px solid #e5e7eb}
+.qr-lbl{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.qr-item{font-size:12px;color:#4b5563;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.qr-foot{padding:14px 20px;background:#f9fafb;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.ob{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:7px 16px;border-radius:8px;text-decoration:none;transition:background .15s;cursor:pointer}
+.ob-primary{background:#0a1f3c;color:#fff;border:none}
+.ob-primary:hover{background:#1a3a5c}
+.ob-outline{background:transparent;color:#374151;border:1px solid #d1d5db}
+.ob-outline:hover{background:#f9fafb}
+.ob-purple{background:#5b21b6;color:#fff;border:none}
+.ob-purple:hover{background:#4c1d95}
+
+/* CTA */
+.cta{background:#0a1f3c;border-radius:12px;padding:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:8px}
+.footer{text-align:center;padding:20px;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-badge"><div class="hero-dot"></div>Agent running &nbsp;&middot;&nbsp; BCG EP&P Ops</div>
+  <h1>Coupa Invoice Validation<br><span>Agentic AI &mdash; Stakeholder Review Hub</span></h1>
+  <div class="agentic-tag">&#129504; Upgraded to true agentic AI &nbsp;&middot;&nbsp; v3.0 &nbsp;&middot;&nbsp; Claude tool-use architecture</div>
+  <p>All prototypes, technical designs, and approval materials for the autonomous invoice validation agent. Claude is the orchestrator — not just a tiebreaker.</p>
+  <div class="hero-meta">
+    <span>&#128197; May 2026</span>
+    <span>&#128274; BCG Internal &middot; Confidential</span>
+    <span>&#127760; EP&P Ops</span>
+    <span>&#9989; Phase 1 approval pending</span>
+  </div>
+</div>
+
+<div class="outer">
+
+  <!-- AGENTIC CALLOUT -->
+  <div class="slbl">What makes this true agentic AI</div>
+  <div class="agentic-callout">
+    <div class="ac-head">
+      <span class="ac-badge">v3.0 upgrade</span>
+      <div class="ac-title">Claude is now the orchestrator — not a tiebreaker at the end of a pipeline</div>
+    </div>
+    <div class="ac-body">
+      The original design was sophisticated RPA — a hardcoded sequence that called Claude only when it got confused. v3.0 redesigns the core: Claude receives the invoice ID and 12 tools, then decides everything autonomously — which tools to call, in what order, what action to take, and what to write in Coupa. No fixed sequence. No templates.
+    </div>
+    <div class="ac-grid">
+      <div class="ac-item">
+        <div class="ac-item-title">&#128296; Tool-use architecture</div>
+        <div class="ac-item-desc">12 tools available. Claude decides which to call and when — fetch, validate, cross-check, act, escalate, learn. No hardcoded order.</div>
+      </div>
+      <div class="ac-item">
+        <div class="ac-item-title">&#129504; Long-term memory</div>
+        <div class="ac-item-desc">vendor_patterns.json grows with every invoice. Claude reads vendor history before validating — past failures shape current decisions.</div>
+      </div>
+      <div class="ac-item">
+        <div class="ac-item-title">&#128260; Reflection + learning</div>
+        <div class="ac-item-desc">store_reflection tool called after every invoice. Claude records patterns and suggests rule improvements. Gets smarter over time.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOURNEY -->
+  <div class="slbl">Suggested review journey</div>
+  <div class="journey">
+    <div class="jstep active"><div class="jstep-num">1</div><div class="jstep-lbl">Start here</div><div class="jstep-sub">Business approval</div></div>
+    <div class="jstep"><div class="jstep-num">2</div><div class="jstep-lbl">See it live</div><div class="jstep-sub">Agentic demo</div></div>
+    <div class="jstep"><div class="jstep-num">3</div><div class="jstep-lbl">Ops dashboard</div><div class="jstep-sub">EP&P team view</div></div>
+    <div class="jstep"><div class="jstep-num">4</div><div class="jstep-lbl">RPA vs Agentic</div><div class="jstep-sub">Why this is different</div></div>
+    <div class="jstep"><div class="jstep-num">5</div><div class="jstep-lbl">Process map</div><div class="jstep-sub">Technical deep dive</div></div>
+    <div class="jstep"><div class="jstep-num">6</div><div class="jstep-lbl">Tech design</div><div class="jstep-sub">Architecture &amp; code</div></div>
+    <div class="jstep"><div class="jstep-num">7</div><div class="jstep-lbl">Approve</div><div class="jstep-sub">Sign off Phase 1</div></div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="slbl">Status</div>
+  <div class="status-bar">
+    <div class="si"><div class="sd g"></div><div><div class="sl2">Prototypes complete</div><div class="ss">All 3 interactive prototypes ready</div></div></div>
+    <div class="si"><div class="sd p"></div><div><div class="sl2">v3.0 agentic upgrade</div><div class="ss">Claude tool-use architecture designed</div></div></div>
+    <div class="si"><div class="sd g"></div><div><div class="sl2">Technical design updated</div><div class="ss">Architecture, loop, tools, memory, infra</div></div></div>
+    <div class="si"><div class="sd a"></div><div><div class="sl2">Business approval pending</div><div class="ss">Phase 1 sign-off required</div></div></div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="slbl">Prototypes &amp; design documents</div>
+  <div class="cards-grid">
+
+    <a href="coupa-agent-prototype.html" class="card featured">
+      <div class="card-top">
+        <div class="card-icon-row">
+          <div class="card-icon blue">&#9989;</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <span class="cbadge-featured">Start here</span>
+            <span class="cbadge-business">Business stakeholders</span>
+          </div>
+        </div>
+        <div class="card-title">Stakeholder approval prototype</div>
+        <div class="card-desc">Dashboard overview, how it works walkthrough in plain business language, and formal approval form with audit trail.</div>
+        <div class="card-features">
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>Live dashboard with real-time KPIs</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>How it works — no technical jargon</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>Formal approval form + audit trail</span>
+        </div>
+      </div>
+      <div class="card-bottom">
+        <div class="card-tags"><span class="tag">Dashboard</span><span class="tag">How it works</span><span class="tag">Approval form</span></div>
+        <span class="card-link">Open </span>
+      </div>
+    </a>
+
+    <a href="coupa-agentic-process-prototype.html" class="card agentic-card">
+      <div class="card-top">
+        <div class="card-icon-row">
+          <div class="card-icon purple">&#129504;</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <span class="cbadge-new">v3.0 Agentic</span>
+            <span class="cbadge-agentic">Mixed audience</span>
+          </div>
+        </div>
+        <div class="card-title">Agentic process prototype</div>
+        <div class="card-desc">Live simulation of Claude running autonomously — processing invoices, calling tools, reasoning about edge cases, and escalating recurring patterns.</div>
+        <div class="card-features">
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>Live agent simulation — click to process invoices</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>Invoice deep dive — 5 step walkthrough</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>Business case + ROI + phased rollout</span>
+        </div>
+      </div>
+      <div class="card-bottom">
+        <div class="card-tags"><span class="tag">Live agent</span><span class="tag">Invoice walkthrough</span><span class="tag">Business case</span></div>
+        <span class="card-link" style="color:#8b5cf6">Open </span>
+      </div>
+    </a>
+
+    <a href="coupa-agent-prototype.html" class="card">
+      <div class="card-top">
+        <div class="card-icon-row">
+          <div class="card-icon green">&#128202;</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <span class="cbadge-ops">EP&P Ops team</span>
+          </div>
+        </div>
+        <div class="card-title">EP&P Ops live dashboard</div>
+        <div class="card-desc">Real-time monitoring for the AP invoice processing team. Auto-refreshes every 60 seconds. On-hold invoices, activity log, CSV export, emergency stop.</div>
+        <div class="card-features">
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>KPI cards — processed, passed, failed, pass rate</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>On-hold table with priority colour coding</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>Emergency stop toggle &amp; CSV export</span>
+        </div>
+      </div>
+      <div class="card-bottom">
+        <div class="card-tags"><span class="tag">Real-time</span><span class="tag">Auto-refresh</span><span class="tag">On-hold invoices</span></div>
+        <span class="card-link">Open </span>
+      </div>
+    </a>
+
+    <a href="coupa-technical-design.html" class="card agentic-card">
+      <div class="card-top">
+        <div class="card-icon-row">
+          <div class="card-icon amber">&#128187;</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <span class="cbadge-new">v3.0 Updated</span>
+            <span class="cbadge-tech">IT &amp; developers</span>
+          </div>
+        </div>
+        <div class="card-title">Technical design v3.0</div>
+        <div class="card-desc">Updated for true agentic AI. Claude tool-use architecture, 12-tool registry, vendor memory system, 8-step agentic loop with Python code, infra specs.</div>
+        <div class="card-features">
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>4-layer architecture — Claude as orchestrator</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>Agentic loop + tool registry (8 steps, with code)</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>Vendor memory system + systemd service</span>
+        </div>
+      </div>
+      <div class="card-bottom">
+        <div class="card-tags"><span class="tag">Architecture</span><span class="tag">Tool registry</span><span class="tag">Memory</span><span class="tag">Infra</span></div>
+        <span class="card-link" style="color:#8b5cf6">Open </span>
+      </div>
+    </a>
+
+    <a href="coupa-rpa-vs-agentic.html" class="card" style="border:2px solid #7F77DD">
+      <div class="card-top">
+        <div class="card-icon-row">
+          <div class="card-icon purple">&#8596;</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <span class="cbadge-new" style="background:#534AB7">New</span>
+            <span class="cbadge-agentic">All audiences</span>
+          </div>
+        </div>
+        <div class="card-title">RPA vs Agentic AI — comparison</div>
+        <div class="card-desc">Full comparison of the old RPA design vs the new agentic AI architecture across 11 capabilities, 8 business benefits, 5 real-world scenarios, and an AI maturity model.</div>
+        <div class="card-features">
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>11-row capability comparison table</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>5 clickable real-world scenarios with side-by-side responses</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>AI maturity model — Stage 1 RPA to Stage 4 full autonomy</span>
+        </div>
+      </div>
+      <div class="card-bottom">
+        <div class="card-tags"><span class="tag">Comparison</span><span class="tag">Benefits</span><span class="tag">Scenarios</span><span class="tag">Maturity</span></div>
+        <span class="card-link" style="color:#534AB7">Open </span>
+      </div>
+    </a>
+
+    <a href="coupa-process-map.html" class="card" style="border:2px solid #0369a1">
+      <div class="card-top">
+        <div class="card-icon-row">
+          <div class="card-icon blue">&#128301;</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <span class="cbadge-new" style="background:#0369a1">New</span>
+            <span class="cbadge-tech">IT &amp; developers</span>
+          </div>
+        </div>
+        <div class="card-title">Low-level technical process map</div>
+        <div class="card-desc">Full swimlane process map, message sequence diagram, data flow specs, API contracts, error handling matrix, and invoice state machine for technical review.</div>
+        <div class="card-features">
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>5-phase swimlane process map across all components</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>22-step message sequence diagram + full API contracts</span>
+          <span><span style="color:#16a34a;font-weight:600">&#10003;</span>Error handling matrix + invoice state machine</span>
+        </div>
+      </div>
+      <div class="card-bottom">
+        <div class="card-tags"><span class="tag">Process map</span><span class="tag">Sequence</span><span class="tag">API contracts</span><span class="tag">State machine</span></div>
+        <span class="card-link" style="color:#0369a1">Open </span>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- QUICK REFERENCE -->
+  <div class="slbl">Quick reference — v3.0 agentic design</div>
+  <div class="qr">
+    <div class="qr-grid">
+      <div class="qr-col">
+        <div class="qr-lbl">What Claude validates</div>
+        <div class="qr-item"><span style="background:#fef3c7;color:#92400e;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600">Tax</span>4 rules across all invoice lines</div>
+        <div class="qr-item"><span style="background:#fee2e2;color:#991b1b;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600">WHT</span>Vendor master vs applied codes</div>
+        <div class="qr-item"><span style="background:#f3f4f6;color:#6b7280;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600">Duplicate</span>Cross-invoice vendor check</div>
+        <div class="qr-item"><span style="background:#f3f4f6;color:#6b7280;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600">PO</span>5% tolerance (when PO linked)</div>
+      </div>
+      <div class="qr-col">
+        <div class="qr-lbl">How v3.0 works</div>
+        <div class="qr-item">&#129504; Claude decides which tools to call</div>
+        <div class="qr-item">&#128296; 12 tools &middot; up to 20 iterations</div>
+        <div class="qr-item">&#128260; Reads vendor history before validating</div>
+        <div class="qr-item">&#9997; Writes its own Coupa comments</div>
+        <div class="qr-item">&#129504; Stores reflection after every invoice</div>
+        <div class="qr-item">&#9995; Emergency stop via config flag</div>
+      </div>
+      <div class="qr-col">
+        <div class="qr-lbl">Tech stack</div>
+        <div class="qr-item">&#128013; Python 3.11 + asyncio</div>
+        <div class="qr-item">&#129504; Anthropic tool-use API</div>
+        <div class="qr-item">&#127760; FastAPI dashboard (port 8080)</div>
+        <div class="qr-item">&#128274; OAuth2 + BCG internal server</div>
+        <div class="qr-item">&#128451; vendor_patterns.json (memory)</div>
+        <div class="qr-item">&#128196; JSONL audit log + reasoning</div>
+      </div>
+    </div>
+    <div class="qr-foot">
+      <div style="font-size:12px;color:#6b7280">All files open in any browser &mdash; no server or internet required</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="coupa-agent-prototype.html" class="ob ob-outline">&#128202; Dashboard &amp; approval</a>
+        <a href="coupa-agentic-process-prototype.html" class="ob ob-outline">&#129504; Agentic demo</a>
+        <a href="coupa-rpa-vs-agentic.html" class="ob ob-outline">&#8596; RPA vs Agentic</a>
+        <a href="coupa-process-map.html" class="ob ob-outline">&#128301; Process map</a>
+        <a href="coupa-technical-design.html" class="ob ob-purple">&#128187; Technical design v3.0</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <div>
+      <div style="font-size:16px;font-weight:600;color:#fff;margin-bottom:6px">Ready to approve Phase 1?</div>
+      <div style="font-size:13px;color:#8aaac8;line-height:1.65">Open the stakeholder approval prototype to review the full business case and submit your decision with an audit-trail comment.</div>
+    </div>
+    <a href="coupa-agent-prototype.html" class="ob ob-primary" style="font-size:13px;padding:10px 24px">&#9989; Open approval prototype &rarr;</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  Coupa Invoice Validation Agent v3.0 &nbsp;&middot;&nbsp; True agentic AI &nbsp;&middot;&nbsp; EP&P Ops &nbsp;&middot;&nbsp; <strong>BCG Internal &middot; Confidential</strong> &nbsp;&middot;&nbsp; May 2026
+</div>
+</body>
+</html>

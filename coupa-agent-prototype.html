@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coupa Invoice Validation Agent — Stakeholder Approval Prototype</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;min-height:100vh;padding:24px 16px}
+  .outer{max-width:960px;margin:0 auto}
+  .proto-wrap{border:1px solid #d1d5db;border-radius:12px;overflow:hidden;background:#fff}
+
+  /* NAV */
+  .nav{background:#0a1f3c;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:50px;flex-wrap:wrap;gap:8px}
+  .nav-brand{color:#fff;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+  .nav-brand i{font-size:16px}
+  .nav-brand span{color:#7aafd4;font-size:12px;font-weight:400}
+  .nav-tabs{display:flex;gap:2px}
+  .nav-tab{color:#8aaac8;font-size:12px;padding:6px 14px;cursor:pointer;border-radius:4px;border:none;background:transparent;transition:all .15s;white-space:nowrap}
+  .nav-tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+  .nav-tab.active{color:#fff;background:rgba(255,255,255,.15)}
+  .agent-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:#7dc97d;background:rgba(125,201,125,.15);padding:4px 10px;border-radius:20px}
+  .dot{width:6px;height:6px;border-radius:50%;background:#7dc97d;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* SCREENS */
+  .screen{display:none}
+  .screen.active{display:block;animation:fadein .2s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  /* HERO */
+  .hero{background:#f8f9fb;border-bottom:1px solid #e5e7eb;padding:20px 24px}
+  .hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+  .hero-title{font-size:17px;font-weight:600;color:#111827;margin-bottom:3px}
+  .hero-sub{font-size:12px;color:#6b7280}
+  .hero-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .refresh-info{font-size:11px;color:#9ca3af}
+  .prog{width:50px;height:3px;background:#e5e7eb;border-radius:2px;overflow:hidden}
+  .prog-inner{height:100%;width:0;background:#3b82f6;border-radius:2px;animation:prg 60s linear infinite}
+  @keyframes prg{to{width:100%}}
+  .estop-btn{font-size:11px;padding:5px 12px;background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;border-radius:6px;cursor:pointer;font-weight:500;white-space:nowrap}
+  .resume-btn{font-size:11px;padding:5px 12px;background:#f0fdf4;color:#166534;border:1px solid #86efac;border-radius:6px;cursor:pointer;font-weight:500;white-space:nowrap}
+
+  /* KPI */
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  @media(max-width:700px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
+  .kpi{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px}
+  .kpi-lbl{font-size:11px;color:#6b7280;margin-bottom:5px}
+  .kpi-val{font-size:24px;font-weight:600;line-height:1;color:#111827}
+  .kpi-val.g{color:#16a34a}.kpi-val.r{color:#dc2626}.kpi-val.a{color:#d97706}
+  .kpi-sub{font-size:11px;color:#9ca3af;margin-top:4px}
+
+  /* BODY */
+  .body-pad{padding:20px 24px}
+  .two-col{display:grid;grid-template-columns:3fr 2fr;gap:14px;margin-bottom:14px}
+  @media(max-width:640px){.two-col{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:14px}
+  .card-title{font-size:13px;font-weight:600;color:#111827;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+
+  /* BAR CHART */
+  .bar-area{display:flex;align-items:flex-end;gap:4px;height:100px;margin-bottom:8px}
+  .bc{display:flex;flex-direction:column;align-items:center;flex:1;gap:1px;justify-content:flex-end}
+  .bp{width:100%;background:#16a34a;border-radius:2px 2px 0 0;min-height:2px}
+  .bf{width:100%;background:#dc2626;min-height:2px}
+  .bdate{font-size:9px;color:#9ca3af;margin-top:3px}
+  .legend{display:flex;gap:12px;font-size:11px;color:#6b7280}
+  .ldot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:3px;vertical-align:1px}
+
+  /* DONUT */
+  .donut-row{display:flex;align-items:center;gap:14px}
+  .leg-list{flex:1;display:flex;flex-direction:column;gap:8px}
+  .leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#4b5563}
+  .leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .leg-pct{margin-left:auto;font-weight:600;font-size:12px;color:#111827}
+
+  /* TABLE */
+  .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .srch{font-size:12px;padding:6px 10px;border-radius:6px;border:1px solid #d1d5db;flex:1;min-width:140px;background:#fff;color:#111827}
+  .sel{font-size:12px;padding:6px 8px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#111827}
+  .tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+  .tbl th{font-size:11px;color:#6b7280;font-weight:500;padding:7px 8px;border-bottom:1px solid #e5e7eb;background:#f9fafb;text-align:left}
+  .tbl td{padding:8px;border-bottom:1px solid #f3f4f6;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#111827}
+  .row-r td{background:#fff8f8}.row-a td{background:#fffdf0}
+  .chip{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;margin-right:2px}
+  .chip-a{background:#fef3c7;color:#92400e}.chip-r{background:#fee2e2;color:#991b1b}.chip-c{background:#fff7ed;color:#9a3412}.chip-g{background:#dcfce7;color:#166534}
+  .abtn{font-size:11px;padding:3px 8px;border-radius:4px;border:1px solid #d1d5db;background:transparent;color:#4b5563;cursor:pointer;margin-right:2px}
+  .abtn:hover{background:#f3f4f6}
+
+  /* TIMELINE */
+  .timeline{display:flex;flex-direction:column;gap:6px}
+  .te{display:flex;gap:10px;padding:8px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;font-size:12px}
+  .te-time{font-size:11px;color:#9ca3af;white-space:nowrap;min-width:38px;padding-top:2px}
+  .te-body{flex:1}
+  .te-inv{font-weight:600;color:#111827}.te-sup{color:#6b7280}
+  .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500}
+  .bg{background:#dcfce7;color:#166534}.br{background:#fee2e2;color:#991b1b}.be{background:#fff7ed;color:#9a3412}
+  .chks{display:flex;gap:8px;margin-top:3px;font-size:11px;color:#9ca3af}
+
+  /* FOOTER STATS */
+  .footer-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px}
+  @media(max-width:600px){.footer-grid{grid-template-columns:1fr}}
+  .stat-box{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px}
+  .sb-title{font-size:11px;color:#6b7280;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .sb-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#6b7280}
+  .sb-row span:last-child{font-weight:600;color:#111827}
+  .exp-btn{width:100%;margin-top:8px;font-size:12px;padding:7px;border-radius:6px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;color:#374151;display:flex;align-items:center;justify-content:center;gap:5px}
+  .exp-btn:hover{background:#f3f4f6}
+
+  /* REFRESH STRIP */
+  .refresh-strip{display:flex;align-items:center;justify-content:space-between;padding:8px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;flex-wrap:wrap;gap:4px}
+
+  /* HOW IT WORKS */
+  .how-section{padding:20px 24px}
+  .section-heading{font-size:16px;font-weight:600;color:#111827;margin-bottom:4px}
+  .section-sub-text{font-size:13px;color:#6b7280;margin-bottom:20px}
+  .step-flow{display:flex;flex-direction:column;gap:0;margin-bottom:24px}
+  .step{display:flex;gap:14px;padding-bottom:22px;position:relative}
+  .step:last-child{padding-bottom:0}
+  .step-line{position:absolute;left:19px;top:42px;width:1px;height:calc(100% - 22px);background:#e5e7eb}
+  .step:last-child .step-line{display:none}
+  .step-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;border:1px solid #e5e7eb;background:#fff;z-index:1}
+  .step-icon.blue{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+  .step-icon.amber{background:#fffbeb;border-color:#fcd34d;color:#92400e}
+  .step-icon.green{background:#f0fdf4;border-color:#86efac;color:#166534}
+  .step-icon.red{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+  .step-icon.purple{background:#f5f3ff;border-color:#c4b5fd;color:#5b21b6}
+  .step-content{flex:1;padding-top:8px}
+  .step-title{font-size:14px;font-weight:600;color:#111827;margin-bottom:4px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+  .step-desc{font-size:12px;color:#4b5563;line-height:1.7}
+  .step-tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
+  .benefit-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.benefit-grid{grid-template-columns:1fr}}
+  .benefit-card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:14px}
+  .benefit-icon{font-size:20px;margin-bottom:8px;color:#6b7280}
+  .benefit-title{font-size:13px;font-weight:600;color:#111827;margin-bottom:4px}
+  .benefit-desc{font-size:12px;color:#4b5563;line-height:1.6}
+  .benefit-metric{font-size:20px;font-weight:600;margin-top:10px}
+  .benefit-metric.g{color:#16a34a}.benefit-metric.b{color:#2563eb}
+
+  /* APPROVAL */
+  .approve-section{padding:20px 24px}
+  .approve-card{background:#fff;border:2px solid #3b82f6;border-radius:12px;padding:20px;margin-bottom:16px}
+  .approve-title{font-size:16px;font-weight:600;color:#111827;margin-bottom:6px}
+  .approve-sub{font-size:13px;color:#4b5563;margin-bottom:18px;line-height:1.7}
+  .scope-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+  @media(max-width:560px){.scope-grid{grid-template-columns:1fr}}
+  .scope-item{background:#f9fafb;border-radius:6px;padding:10px 12px}
+  .scope-lbl{font-size:10px;color:#9ca3af;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+  .scope-val{font-size:12px;font-weight:500;color:#111827}
+  .risk-list{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+  .risk-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#4b5563;padding:10px 12px;background:#fffbeb;border-radius:6px;border:1px solid #fde68a;line-height:1.6}
+  .approve-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .btn-approve{padding:10px 20px;background:#f0fdf4;color:#166534;border:1px solid #86efac;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s}
+  .btn-approve:hover{background:#dcfce7}
+  .btn-decline{padding:10px 20px;background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+  .btn-decline:hover{background:#fee2e2}
+  .btn-comment{padding:10px 20px;background:#f9fafb;color:#4b5563;border:1px solid #d1d5db;border-radius:6px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .btn-comment:hover{background:#f3f4f6}
+  .approved-banner{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:16px;display:flex;align-items:center;gap:12px;font-size:13px;color:#166534;font-weight:600;margin-bottom:16px}
+  .declined-banner{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:16px;display:flex;align-items:center;gap:12px;font-size:13px;color:#991b1b;font-weight:600;margin-bottom:16px}
+  .comment-box{background:#f9fafb;border-radius:8px;padding:14px;margin-bottom:16px;border:1px solid #e5e7eb}
+  .comment-box label{font-size:12px;font-weight:500;color:#374151;display:block;margin-bottom:6px}
+  .comment-box textarea{width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px;font-size:12px;color:#111827;background:#fff;resize:vertical;min-height:70px;font-family:inherit}
+  .submit-comment{margin-top:8px;padding:7px 16px;background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500}
+  .approval-trail{display:flex;flex-direction:column;gap:10px}
+  .trail-item{display:flex;gap:10px;font-size:12px}
+  .trail-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+  .trail-body{flex:1;padding-top:4px}
+  .trail-name{font-weight:600;color:#111827}
+  .trail-action{color:#4b5563}
+  .trail-time{font-size:11px;color:#9ca3af;margin-top:2px}
+
+  /* SVG ICONS INLINE */
+  svg.icon{width:16px;height:16px;display:inline-block;vertical-align:-3px;margin-right:4px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div class="outer">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div>
+      <p style="font-size:12px;color:#9ca3af;margin-bottom:2px">BCG Internal · EP&P Ops</p>
+      <p style="font-size:11px;color:#d1d5db">Stakeholder approval prototype · Confidential</p>
+    </div>
+    <div style="font-size:11px;color:#9ca3af;background:#fff;border:1px solid #e5e7eb;padding:5px 12px;border-radius:20px">
+      &#128065; Prototype — for review only
+    </div>
+  </div>
+
+  <div class="proto-wrap">
+    <!-- NAV -->
+    <div class="nav">
+      <div class="nav-brand">
+        <svg class="icon" style="stroke:#7aafd4;margin-right:0" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Coupa Invoice Validation Agent
+        <span>EP&P Ops · BCG</span>
+      </div>
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="show('dashboard',this)">
+          <svg class="icon" viewBox="0 0 24 24" style="stroke:currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Live dashboard
+        </button>
+        <button class="nav-tab" onclick="show('how',this)">
+          <svg class="icon" viewBox="0 0 24 24" style="stroke:currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          How it works
+        </button>
+        <button class="nav-tab" onclick="show('approve',this)">
+          <svg class="icon" viewBox="0 0 24 24" style="stroke:currentColor"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Stakeholder approval
+        </button>
+      </div>
+      <div class="agent-pill"><div class="dot"></div>Agent running</div>
+    </div>
+
+    <!-- ── SCREEN 1: DASHBOARD ── -->
+    <div class="screen active" id="s-dashboard">
+      <div class="hero">
+        <div class="hero-top">
+          <div>
+            <div class="hero-title">AP Invoice Validation Dashboard</div>
+            <div class="hero-sub">Real-time view of AI agent activity &middot; Auto-refreshes every 60 seconds</div>
+          </div>
+          <div class="hero-right">
+            <span class="refresh-info">Next refresh <span id="cd2">53</span>s</span>
+            <div class="prog"><div class="prog-inner"></div></div>
+            <button class="estop-btn" id="stopbtn" onclick="toggleStop()">&#9646; Stop agent</button>
+          </div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-lbl">&#128196; Processed today</div><div class="kpi-val">47</div><div class="kpi-sub">invoices reviewed</div></div>
+          <div class="kpi"><div class="kpi-lbl">&#10003; Passed</div><div class="kpi-val g">38</div><div class="kpi-sub">cleared for submission</div></div>
+          <div class="kpi"><div class="kpi-lbl">&#10007; Failed</div><div class="kpi-val r">9</div><div class="kpi-sub">AP action needed</div></div>
+          <div class="kpi"><div class="kpi-lbl">&#9685; Pass rate</div><div class="kpi-val g">81%</div><div class="kpi-sub">today</div></div>
+          <div class="kpi"><div class="kpi-lbl">&#128336; On hold</div><div class="kpi-val a">5</div><div class="kpi-sub">awaiting AP fix</div></div>
+        </div>
+      </div>
+
+      <div class="body-pad">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Daily trend — last 14 days</div>
+            <div class="bar-area">
+              <div class="bc"><div class="bp" style="height:48px"></div><div class="bf" style="height:6px"></div><div class="bdate">01</div></div>
+              <div class="bc"><div class="bp" style="height:36px"></div><div class="bf" style="height:10px"></div><div class="bdate">02</div></div>
+              <div class="bc"><div class="bp" style="height:56px"></div><div class="bf" style="height:5px"></div><div class="bdate">03</div></div>
+              <div class="bc"><div class="bp" style="height:40px"></div><div class="bf" style="height:14px"></div><div class="bdate">04</div></div>
+              <div class="bc"><div class="bp" style="height:0"></div><div class="bf" style="height:0"></div><div class="bdate">05</div></div>
+              <div class="bc"><div class="bp" style="height:0"></div><div class="bf" style="height:0"></div><div class="bdate">06</div></div>
+              <div class="bc"><div class="bp" style="height:52px"></div><div class="bf" style="height:8px"></div><div class="bdate">07</div></div>
+              <div class="bc"><div class="bp" style="height:44px"></div><div class="bf" style="height:12px"></div><div class="bdate">08</div></div>
+              <div class="bc"><div class="bp" style="height:60px"></div><div class="bf" style="height:3px"></div><div class="bdate">09</div></div>
+              <div class="bc"><div class="bp" style="height:32px"></div><div class="bf" style="height:18px"></div><div class="bdate">10</div></div>
+              <div class="bc"><div class="bp" style="height:48px"></div><div class="bf" style="height:7px"></div><div class="bdate">11</div></div>
+              <div class="bc"><div class="bp" style="height:40px"></div><div class="bf" style="height:10px"></div><div class="bdate">12</div></div>
+              <div class="bc"><div class="bp" style="height:55px"></div><div class="bf" style="height:5px"></div><div class="bdate">13</div></div>
+              <div class="bc"><div class="bp" style="height:38px"></div><div class="bf" style="height:16px"></div><div class="bdate">14</div></div>
+            </div>
+            <div class="legend">
+              <span><span class="ldot" style="background:#16a34a"></span>Passed</span>
+              <span><span class="ldot" style="background:#dc2626"></span>Failed</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Failure breakdown — all time</div>
+            <div class="donut-row">
+              <svg viewBox="0 0 100 100" width="90" height="90">
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#d97706" stroke-width="18"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#dc2626" stroke-width="18" stroke-dasharray="70 169" stroke-dashoffset="-120"/>
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#ea580c" stroke-width="18" stroke-dasharray="20 169" stroke-dashoffset="-190"/>
+                <text x="50" y="47" text-anchor="middle" font-size="15" font-weight="700" fill="#111827" font-family="-apple-system,sans-serif">127</text>
+                <text x="50" y="59" text-anchor="middle" font-size="8" fill="#6b7280" font-family="-apple-system,sans-serif">total fails</text>
+              </svg>
+              <div class="leg-list">
+                <div class="leg-item"><div class="leg-dot" style="background:#d97706"></div>Tax validation<div class="leg-pct">54%</div></div>
+                <div class="leg-item"><div class="leg-dot" style="background:#dc2626"></div>WHT validation<div class="leg-pct">37%</div></div>
+                <div class="leg-item"><div class="leg-dot" style="background:#ea580c"></div>Escalated<div class="leg-pct">9%</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">
+            <span style="color:#dc2626">&#10007;</span> Invoices on hold — AP action required
+            <span style="font-size:11px;font-weight:400;color:#6b7280">Agent re-validates within 10 min after fix</span>
+          </div>
+          <div class="filter-row">
+            <input class="srch" type="text" placeholder="Search invoice # or supplier...">
+            <select class="sel"><option>All checks</option><option>Tax</option><option>WHT</option><option>Escalated</option></select>
+          </div>
+          <table class="tbl">
+            <thead><tr>
+              <th style="width:90px">Invoice #</th>
+              <th style="width:120px">Supplier</th>
+              <th style="width:110px">Failed checks</th>
+              <th style="width:70px">On hold</th>
+              <th style="width:60px">Attempts</th>
+              <th style="width:130px">Actions</th>
+            </tr></thead>
+            <tbody>
+              <tr class="row-r"><td style="font-weight:600">INV-2024-0421</td><td>Accenture Israel</td><td><span class="chip chip-a">Tax</span><span class="chip chip-r">WHT</span></td><td style="color:#dc2626;font-weight:600">31h</td><td style="color:#dc2626">4 &#9888;</td><td><button class="abtn">&#8599; Coupa</button><button class="abtn">&#128065; Comment</button></td></tr>
+              <tr class="row-a"><td style="font-weight:600">INV-2024-0438</td><td>Deloitte IL</td><td><span class="chip chip-a">Tax</span></td><td style="color:#d97706;font-weight:600">11h</td><td>2</td><td><button class="abtn">&#8599; Coupa</button><button class="abtn">&#128065; Comment</button></td></tr>
+              <tr><td style="font-weight:600">INV-2024-0449</td><td>PwC Advisory</td><td><span class="chip chip-a">Tax</span></td><td>3h</td><td>1</td><td><button class="abtn">&#8599; Coupa</button><button class="abtn">&#128065; Comment</button></td></tr>
+              <tr><td style="font-weight:600">INV-2024-0452</td><td>EY Israel</td><td><span class="chip chip-c">Escalated</span></td><td>1h</td><td>1</td><td><button class="abtn">&#8599; Coupa</button><button class="abtn">&#128065; Comment</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Recent agent activity</div>
+          <div class="timeline">
+            <div class="te"><div class="te-time">14:30</div><div class="te-body"><div><span class="te-inv">INV-2024-0453</span> — <span class="te-sup">McKinsey & Co</span> <span class="badge bg">Passed</span></div><div class="chks"><span>Tax ✓</span><span>WHT ✓</span><span>Attempt 1</span></div></div></div>
+            <div class="te"><div class="te-time">14:20</div><div class="te-body"><div><span class="te-inv">INV-2024-0452</span> — <span class="te-sup">EY Israel</span> <span class="badge be">Escalated</span></div><div class="chks"><span>Tax ✓</span><span>WHT ✗</span><span>Attempt 1</span></div></div></div>
+            <div class="te"><div class="te-time">14:10</div><div class="te-body"><div><span class="te-inv">INV-2024-0450</span> — <span class="te-sup">BCG Germany</span> <span class="badge bg">Passed</span></div><div class="chks"><span>Tax ✓</span><span>WHT ✓</span><span>Attempt 2 — re-validated after fix</span></div></div></div>
+            <div class="te"><div class="te-time">14:00</div><div class="te-body"><div><span class="te-inv">INV-2024-0449</span> — <span class="te-sup">PwC Advisory</span> <span class="badge br">Failed</span></div><div class="chks"><span>Tax ✗</span><span>WHT ✓</span><span>Attempt 1</span></div></div></div>
+          </div>
+        </div>
+
+        <div class="footer-grid">
+          <div class="stat-box">
+            <div class="sb-title">Last 7 days</div>
+            <div class="sb-row"><span>Total processed</span><span>284</span></div>
+            <div class="sb-row"><span>Passed</span><span style="color:#16a34a">231</span></div>
+            <div class="sb-row"><span>Failed</span><span style="color:#dc2626">53</span></div>
+            <div class="sb-row"><span>Pass rate</span><span>81%</span></div>
+          </div>
+          <div class="stat-box">
+            <div class="sb-title">All time</div>
+            <div class="sb-row"><span>Total processed</span><span>1,842</span></div>
+            <div class="sb-row"><span>Passed</span><span style="color:#16a34a">1,715</span></div>
+            <div class="sb-row"><span>Failed</span><span style="color:#dc2626">127</span></div>
+            <div class="sb-row"><span>Pass rate</span><span>93%</span></div>
+          </div>
+          <div class="stat-box">
+            <div class="sb-title">Export report</div>
+            <select class="sel" style="width:100%;margin-bottom:6px"><option>Last 7 days</option><option>Today</option><option>Last 30 days</option><option>All time</option></select>
+            <select class="sel" style="width:100%;margin-bottom:6px"><option>All statuses</option><option>Passed only</option><option>Failed only</option></select>
+            <button class="exp-btn">&#8595; Export CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="refresh-strip">
+        <span>&#8635; Auto-refresh every 60 seconds &middot; Last updated 14:32:05 &middot; <strong>This is a prototype — data is illustrative</strong></span>
+        <span>Dashboard will run at http://[internal-server]:8080</span>
+      </div>
+    </div>
+
+    <!-- ── SCREEN 2: HOW IT WORKS ── -->
+    <div class="screen" id="s-how">
+      <div class="how-section">
+        <div class="section-heading">How the agent works</div>
+        <div class="section-sub-text">Zero manual intervention — fully autonomous end-to-end</div>
+
+        <div class="step-flow">
+          <div class="step">
+            <div class="step-line"></div>
+            <div class="step-icon blue">&#128336;</div>
+            <div class="step-content">
+              <div class="step-title">Automatic polling every 10 minutes <span class="step-tag" style="background:#eff6ff;color:#1d4ed8">Fully automated</span></div>
+              <div class="step-desc">The agent continuously monitors Coupa for new invoices with status "draft" and AP hold code "Pending Agent Review". No human needs to trigger this — it runs 24/7 on a 10-minute cycle.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-line"></div>
+            <div class="step-icon amber">&#10003;</div>
+            <div class="step-content">
+              <div class="step-title">Runs 2 validation checks in parallel</div>
+              <div class="step-desc"><strong>Tax validation</strong> checks that tax codes, rates, and amounts on every invoice line match Coupa master data. <strong>WHT validation</strong> checks that withholding tax codes applied on the invoice match the vendor master configuration.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-line"></div>
+            <div class="step-icon purple">&#129504;</div>
+            <div class="step-content">
+              <div class="step-title">Claude AI reasons about edge cases <span class="step-tag" style="background:#f5f3ff;color:#5b21b6">AI powered</span></div>
+              <div class="step-desc">For ambiguous or borderline cases, the agent calls Claude AI (Anthropic) to reason about the best action — submit, hold, or escalate. Claude considers context like number of previous attempts and whether issues are likely data-entry errors vs genuine compliance concerns.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-line"></div>
+            <div class="step-icon green">&#9654;</div>
+            <div class="step-content">
+              <div class="step-title">Pass &#8594; auto-submits for approval</div>
+              <div class="step-desc">If all checks pass, the agent automatically clears the AP hold code, posts a "Verified by Agent — OK to submit" comment in Coupa, and moves the invoice forward. No AP team action needed.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-line"></div>
+            <div class="step-icon red">&#128274;</div>
+            <div class="step-content">
+              <div class="step-title">Fail &#8594; blocks and writes structured error comment in Coupa</div>
+              <div class="step-desc">If checks fail, the agent sets the invoice to on-hold and writes a detailed error comment directly into the Coupa comment box — exact line numbers, expected vs actual values, and corrective action required. The AP team sees this immediately in Coupa without needing to look elsewhere.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-icon blue">&#8635;</div>
+            <div class="step-content">
+              <div class="step-title">Auto re-validates after AP fixes the invoice</div>
+              <div class="step-desc">Once the AP team corrects the invoice in Coupa, the agent detects the change on the next 10-minute cycle and automatically re-runs all validations. If it now passes, it auto-submits. If it still fails, it updates the error comment with the new findings.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:12px">Business benefits</div>
+        <div class="benefit-grid">
+          <div class="benefit-card">
+            <div class="benefit-icon">&#9200;</div>
+            <div class="benefit-title">Eliminates manual review time</div>
+            <div class="benefit-desc">AP team no longer manually checks tax codes and WHT codes before submission — the agent does it instantly and automatically, every invoice, every time.</div>
+            <div class="benefit-metric g">~3 hrs/day saved</div>
+          </div>
+          <div class="benefit-card">
+            <div class="benefit-icon">&#128737;</div>
+            <div class="benefit-title">Prevents SAP integration failures</div>
+            <div class="benefit-desc">Catches tax and WHT errors before they reach SAP, avoiding costly reprocessing, SAP error queues, and payment delays to vendors.</div>
+            <div class="benefit-metric g">Zero SAP rejections</div>
+          </div>
+          <div class="benefit-card">
+            <div class="benefit-icon">&#128065;</div>
+            <div class="benefit-title">Full audit trail</div>
+            <div class="benefit-desc">Every agent decision is logged with timestamp, invoice details, validation results, and Claude's reasoning — complete accountability for every action taken.</div>
+            <div class="benefit-metric b">100% traceable</div>
+          </div>
+          <div class="benefit-card">
+            <div class="benefit-icon">&#128722;</div>
+            <div class="benefit-title">Human override always available</div>
+            <div class="benefit-desc">Emergency stop toggle in the dashboard pauses the agent instantly without any code changes. AP team and management retain full control at all times.</div>
+            <div class="benefit-metric b">One-click pause</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN 3: APPROVAL ── -->
+    <div class="screen" id="s-approve">
+      <div class="approve-section">
+        <div id="approval-form">
+          <div class="approve-card">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+              <span style="background:#eff6ff;color:#1d4ed8;font-size:11px;padding:3px 10px;border-radius:10px;font-weight:600">Pending approval</span>
+              <span style="font-size:11px;color:#9ca3af">Submitted 14 May 2026</span>
+            </div>
+            <div class="approve-title">Coupa Invoice Validation Agent — business approval request</div>
+            <div class="approve-sub">The EP&P Ops team requests approval to deploy an autonomous AI agent that validates Coupa invoices before submission to the approval workflow, with the goal of preventing SAP integration failures caused by tax and WHT errors.</div>
+
+            <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Solution scope</div>
+            <div class="scope-grid">
+              <div class="scope-item"><div class="scope-lbl">Solution</div><div class="scope-val">Python agentic AI + FastAPI dashboard</div></div>
+              <div class="scope-item"><div class="scope-lbl">Coupa environment</div><div class="scope-val">BCG Coupa (production)</div></div>
+              <div class="scope-item"><div class="scope-lbl">Poll frequency</div><div class="scope-val">Every 10 minutes, 24/7 autonomous</div></div>
+              <div class="scope-item"><div class="scope-lbl">Validations in scope</div><div class="scope-val">Tax codes, WHT codes (PRN — Phase 2)</div></div>
+              <div class="scope-item"><div class="scope-lbl">SAP integration</div><div class="scope-val">Phase 2 — read-only validation only</div></div>
+              <div class="scope-item"><div class="scope-lbl">Infrastructure</div><div class="scope-val">BCG internal server (VPN only)</div></div>
+              <div class="scope-item"><div class="scope-lbl">AI model used</div><div class="scope-val">Claude Sonnet (Anthropic API)</div></div>
+              <div class="scope-item"><div class="scope-lbl">Rollback mechanism</div><div class="scope-val">Emergency stop via config — instant</div></div>
+            </div>
+
+            <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Risks and mitigations</div>
+            <div class="risk-list">
+              <div class="risk-item"><span style="font-size:14px;flex-shrink:0">&#9888;</span><div><strong>Risk:</strong> Agent incorrectly holds a valid invoice. <strong>Mitigation:</strong> All validation logic mirrors existing n8n workflow exactly. AP team receives a detailed error comment and can override. The agent never deletes or modifies financial data.</div></div>
+              <div class="risk-item"><span style="font-size:14px;flex-shrink:0">&#9888;</span><div><strong>Risk:</strong> Coupa API downtime disrupts the agent. <strong>Mitigation:</strong> Agent retries 3 times with exponential backoff, then logs the error and alerts the support team. No invoice is left in an unknown state.</div></div>
+              <div class="risk-item"><span style="font-size:14px;flex-shrink:0">&#9888;</span><div><strong>Risk:</strong> Invoice data privacy — data processed by Claude AI. <strong>Mitigation:</strong> Only borderline edge cases are sent to Claude. Core validation logic is entirely local Python. Anthropic zero-data-retention API option available on request.</div></div>
+            </div>
+
+            <div class="comment-box">
+              <label>Add a comment or condition before approving (optional)</label>
+              <textarea placeholder="e.g. Approved subject to data privacy review being completed by IT Security before go-live..."></textarea>
+              <button class="submit-comment">Submit comment</button>
+            </div>
+
+            <div class="approve-actions">
+              <button class="btn-approve" onclick="doApprove()">&#10003; Approve deployment</button>
+              <button class="btn-decline" onclick="doDecline()">&#10007; Decline</button>
+            </div>
+          </div>
+
+          <div class="stat-box">
+            <div class="sb-title" style="margin-bottom:12px">Approval trail</div>
+            <div class="approval-trail">
+              <div class="trail-item">
+                <div class="trail-avatar" style="background:#eff6ff;color:#1d4ed8">AT</div>
+                <div class="trail-body"><div><span class="trail-name">Amit T.</span> <span class="trail-action">submitted request for approval</span></div><div class="trail-time">14 May 2026, 10:14</div></div>
+              </div>
+              <div class="trail-item">
+                <div class="trail-avatar" style="background:#f5f3ff;color:#5b21b6">SR</div>
+                <div class="trail-body"><div><span class="trail-name">Sarah R.</span> <span class="trail-action">reviewed prototype and technical specification</span></div><div class="trail-time">14 May 2026, 11:30</div></div>
+              </div>
+              <div class="trail-item">
+                <div class="trail-avatar" style="background:#f3f4f6;color:#6b7280">?</div>
+                <div class="trail-body"><div><span class="trail-name" style="color:#9ca3af">Awaiting stakeholder decision</span></div><div class="trail-time" style="color:#9ca3af">Pending</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="approved-state" style="display:none">
+          <div class="approved-banner">
+            <span style="font-size:22px">&#10004;</span>
+            <div>
+              <div style="font-size:15px">Deployment approved</div>
+              <div style="font-size:12px;font-weight:400;margin-top:2px;color:#166534">Recorded at <span id="approve-time"></span> &middot; EP&P Ops team notified</div>
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="sb-title" style="margin-bottom:12px">Approval trail — complete</div>
+            <div class="approval-trail">
+              <div class="trail-item"><div class="trail-avatar" style="background:#eff6ff;color:#1d4ed8">AT</div><div class="trail-body"><div><span class="trail-name">Amit T.</span> <span class="trail-action">submitted request</span></div><div class="trail-time">14 May 2026, 10:14</div></div></div>
+              <div class="trail-item"><div class="trail-avatar" style="background:#f5f3ff;color:#5b21b6">SR</div><div class="trail-body"><div><span class="trail-name">Sarah R.</span> <span class="trail-action">reviewed prototype</span></div><div class="trail-time">14 May 2026, 11:30</div></div></div>
+              <div class="trail-item"><div class="trail-avatar" style="background:#f0fdf4;color:#166534">&#10003;</div><div class="trail-body"><div><span class="trail-name">Stakeholder</span> <span class="trail-action" style="color:#16a34a;font-weight:600">approved deployment</span></div><div class="trail-time" id="approve-time2">Just now</div></div></div>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding:14px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac;font-size:13px;color:#166534">
+            <strong>Next steps:</strong> EP&P Ops team will coordinate with BCG IT to provision the internal server, configure production OAuth2 credentials, and schedule a 2-week pilot with parallel monitoring before full rollout.
+          </div>
+        </div>
+
+        <div id="declined-state" style="display:none">
+          <div class="declined-banner">
+            <span style="font-size:22px">&#10007;</span>
+            <div>
+              <div>Deployment declined</div>
+              <div style="font-size:12px;font-weight:400;margin-top:2px;color:#991b1b">EP&P Ops team notified &middot; Request can be resubmitted after addressing concerns</div>
+            </div>
+          </div>
+          <div style="padding:14px;background:#fef2f2;border-radius:8px;border:1px solid #fca5a5;font-size:13px;color:#7f1d1d">
+            Common concerns that may need addressing before resubmission: data privacy sign-off from IT Security, formal UAT sign-off on validation rules, change management process for AP team, and SLA definition for agent response times.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="text-align:center;margin-top:14px;font-size:11px;color:#9ca3af">
+    Coupa Invoice Validation Agent &middot; EP&P Ops &middot; BCG Internal &middot; Prototype v1.0 &middot; May 2026
+  </div>
+</div>
+
+<script>
+function show(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('s-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+let stopped = false;
+function toggleStop() {
+  stopped = !stopped;
+  const btn = document.getElementById('stopbtn');
+  const pill = document.querySelector('.agent-pill');
+  const dot = document.querySelector('.dot');
+  if (stopped) {
+    btn.className = 'resume-btn'; btn.textContent = '▶ Resume agent';
+    pill.style.color = '#ef4444'; pill.style.background = 'rgba(239,68,68,.15)';
+    dot.style.background = '#ef4444'; dot.style.animation = 'none';
+  } else {
+    btn.className = 'estop-btn'; btn.textContent = '⏸ Stop agent';
+    pill.style.color = '#7dc97d'; pill.style.background = 'rgba(125,201,125,.15)';
+    dot.style.background = '#7dc97d'; dot.style.animation = 'pulse 2s infinite';
+  }
+}
+function doApprove() {
+  document.getElementById('approval-form').style.display = 'none';
+  document.getElementById('approved-state').style.display = 'block';
+  const t = new Date().toLocaleTimeString();
+  document.getElementById('approve-time').textContent = t;
+  document.getElementById('approve-time2').textContent = t;
+}
+function doDecline() {
+  document.getElementById('approval-form').style.display = 'none';
+  document.getElementById('declined-state').style.display = 'block';
+}
+let cd = 53;
+setInterval(() => {
+  cd--; if (cd < 0) cd = 60;
+  const el = document.getElementById('cd2');
+  if (el) el.textContent = cd;
+}, 1000);
+</script>
+</body>
+</html>

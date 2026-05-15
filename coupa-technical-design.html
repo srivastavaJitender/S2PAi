@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coupa Validation Agent — Technical Design v3.0</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;min-height:100vh;padding:24px 16px;color:#111827}
+.outer{max-width:980px;margin:0 auto}
+.proto-wrap{border:1px solid #d1d5db;border-radius:12px;overflow:hidden;background:#fff}
+.nav{background:#0a1f3c;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:50px;gap:8px;flex-wrap:wrap}
+.brand{color:#fff;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+.brand-sub{color:#7aafd4;font-size:11px}
+.tabs{display:flex;gap:2px}
+.tab{color:#8aaac8;font-size:11px;padding:5px 11px;border:none;background:transparent;border-radius:4px;cursor:pointer;transition:.15s;white-space:nowrap}
+.tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tab.on{color:#fff;background:rgba(255,255,255,.15)}
+.vtag{font-size:10px;padding:3px 10px;border-radius:10px;background:rgba(125,201,125,.2);color:#7dc97d;font-weight:600;white-space:nowrap}
+.scr{display:none}.scr.on{display:block;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.pad{padding:20px 24px}
+.sh{font-size:15px;font-weight:600;color:#111827;margin-bottom:3px}
+.ss{font-size:12px;color:#6b7280;margin-bottom:16px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:14px}
+.ct{font-size:12px;font-weight:600;color:#111827;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.badge{display:inline-flex;align-items:center;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.bg{background:#dcfce7;color:#166534}.br{background:#fee2e2;color:#991b1b}
+.ba{background:#fef3c7;color:#92400e}.bb{background:#dbeafe;color:#1e40af}
+.bp{background:#ede9fe;color:#5b21b6}.bt{background:#d1fae5;color:#065f46}
+.bc{background:#ecfdf5;color:#065f46}.bo{background:#fff7ed;color:#9a3412}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:580px){.row2,.row3{grid-template-columns:1fr}}
+.code{background:#1e2533;color:#a8b4c8;font-family:'Courier New',monospace;font-size:11px;border-radius:8px;padding:12px;line-height:1.85;overflow-x:auto;white-space:pre;margin-top:8px}
+.code .kw{color:#7eb8f7}.code .fn{color:#7ed4a4}.code .st{color:#f4bd7c}.code .cm{color:#5a6a7e}.code .cl{color:#e09ec7}.code .nu{color:#f4a76a}
+.sep{height:1px;background:#e5e7eb;margin:14px 0}
+.ll{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+.cr{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin-bottom:6px}
+.comp{flex:1;min-width:110px;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px}
+.comp-icon{font-size:15px;margin-bottom:4px}
+.comp-title{font-size:12px;font-weight:600;color:#111827;margin-bottom:3px}
+.comp-desc{font-size:11px;color:#4b5563;line-height:1.6}
+.comp.blue{background:#eff6ff;border-color:#93c5fd}
+.comp.green{background:#f0fdf4;border-color:#86efac}
+.comp.amber{background:#fffbeb;border-color:#fcd34d}
+.comp.purple{background:#f5f3ff;border-color:#c4b5fd}
+.comp.teal{background:#ecfdf5;border-color:#6ee7b7}
+.comp.gray{background:#f9fafb;border-color:#d1d5db}
+.comp.coral{background:#fff7ed;border-color:#fdba74}
+.ar{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 0}
+.al{font-size:10px;color:#6b7280;background:#f9fafb;padding:2px 8px;border-radius:4px;border:1px solid #e5e7eb}
+.fl{flex:1;height:1px;background:#d1d5db}
+.stepper{display:flex;align-items:center;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.sn{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:66px;cursor:pointer}
+.sc{width:30px;height:30px;border-radius:50%;border:1px solid #d1d5db;background:#f9fafb;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#9ca3af;transition:.2s;z-index:1}
+.sc.on{background:#ede9fe;border-color:#c4b5fd;color:#5b21b6}
+.sc.done{background:#dcfce7;border-color:#86efac;color:#166534}
+.sl{font-size:9px;color:#9ca3af;text-align:center;max-width:60px;line-height:1.3}
+.sl.on{color:#5b21b6;font-weight:600}.sl.done{color:#166534;font-weight:500}
+.sline{flex:1;height:1px;background:#e5e7eb;margin-top:-15px;min-width:6px}
+.sline.done{background:#86efac}
+.sp{border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:12px;min-height:200px}
+.sp-h{font-size:13px;font-weight:600;color:#111827;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sp-b{font-size:12px;color:#4b5563;line-height:1.75;margin-bottom:8px}
+.nb-row{display:flex;gap:8px;justify-content:space-between;align-items:center}
+.nb{font-size:11px;padding:6px 14px;border-radius:6px;border:1px solid #d1d5db;background:#f9fafb;color:#374151;cursor:pointer;font-weight:500}
+.nb:hover{background:#f3f4f6}.nb.p{background:#ede9fe;border-color:#c4b5fd;color:#5b21b6}
+.nb.p:hover{background:#ddd6fe}.nb:disabled{opacity:.4;cursor:default}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.tc{border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px}
+.tn{font-size:11px;font-weight:600;color:#111827;font-family:'Courier New',monospace;margin-bottom:3px}
+.td{font-size:11px;color:#4b5563;line-height:1.55}
+.tw{font-size:10px;color:#9ca3af;margin-top:4px;font-style:italic}
+.rc{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:10px}
+.rh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px}
+.rt{font-size:12px;font-weight:600;color:#111827;display:flex;align-items:center;gap:6px}
+.rb{font-size:12px;color:#4b5563;line-height:1.7}
+.re{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.rx{flex:1;min-width:100px;background:#f9fafb;border-radius:4px;padding:8px 10px;font-size:11px}
+.rxl{color:#9ca3af;font-size:10px;margin-bottom:2px;text-transform:uppercase}
+.rxv{font-weight:600;color:#111827}
+.rxv.e{color:#dc2626}.rxv.o{color:#16a34a}
+.ib{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.ibl{flex:1;min-width:120px;border:1px solid #e5e7eb;border-radius:8px;padding:12px}
+.ii{font-size:17px;margin-bottom:5px}
+.it{font-size:12px;font-weight:600;color:#111827;margin-bottom:3px}
+.id{font-size:11px;color:#4b5563;line-height:1.6}
+.st2{width:100%;border-collapse:collapse;font-size:12px}
+.st2 td{padding:7px 10px;border-bottom:1px solid #f3f4f6;color:#4b5563;vertical-align:top}
+.st2 td:first-child{font-weight:600;color:#111827;width:200px;white-space:nowrap}
+.st2 tr:last-child td{border:none}
+.hb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;text-decoration:none}
+.hb:hover{background:#f9fafb}
+.pf{text-align:center;margin-top:16px;font-size:11px;color:#9ca3af}
+.ab{background:#f5f3ff;border:1px solid #c4b5fd;border-radius:8px;padding:14px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start}
+.av{background:#5b21b6;color:#fff;font-size:10px;font-weight:700;padding:4px 10px;border-radius:10px;white-space:nowrap;margin-top:1px}
+</style>
+</head>
+<body>
+<div class="outer">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="index.html" class="hb">&#8592; Home</a>
+      <div>
+        <p style="font-size:13px;font-weight:600;color:#374151">BCG Internal &nbsp;&middot;&nbsp; EP&P Ops</p>
+        <p style="font-size:11px;color:#9ca3af;margin-top:1px">Technical design v3.0 &nbsp;&middot;&nbsp; True agentic AI &nbsp;&middot;&nbsp; Confidential</p>
+      </div>
+    </div>
+    <span style="font-size:11px;color:#5b21b6;background:#f5f3ff;border:1px solid #c4b5fd;padding:5px 14px;border-radius:20px;font-weight:600">&#129504; True agentic AI &mdash; Claude tool-use</span>
+  </div>
+
+  <div class="proto-wrap">
+    <div class="nav">
+      <div class="brand">&#128737; Coupa Validation Agent &mdash; Technical Design <span class="brand-sub">v3.0 &middot; True agentic AI</span></div>
+      <div class="tabs">
+        <button class="tab on" onclick="sw('arch',this)">&#9965; Architecture</button>
+        <button class="tab" onclick="sw('loop',this)">&#129504; Agentic loop</button>
+        <button class="tab" onclick="sw('tools',this)">&#128296; Tools</button>
+        <button class="tab" onclick="sw('valid',this)">&#10003; Validators</button>
+        <button class="tab" onclick="sw('infra',this)">&#128187; Infra</button>
+      </div>
+      <span class="vtag">v3.0 Agentic</span>
+    </div>
+
+    <!-- ARCH -->
+    <div class="scr on" id="s-arch">
+    <div class="pad">
+      <div class="ab">
+        <span class="av">v3.0</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#3730a3;margin-bottom:3px">True agentic AI &mdash; Claude is the orchestrator</div>
+          <div style="font-size:12px;color:#4338ca;line-height:1.65">Claude receives invoice_id + 12 tools and decides everything: which tools to call, in what order, what action to take, what to write in Coupa. No hardcoded sequence. Claude reasons, acts, reflects, and learns from every invoice.</div>
+        </div>
+      </div>
+      <div class="sh">System architecture v3.0</div>
+      <div class="ss">Four layers — external systems, Claude agentic core, memory, monitoring</div>
+      <div class="ll">External systems</div>
+      <div class="cr">
+        <div class="comp blue"><div class="comp-icon">&#9729;</div><div class="comp-title">Coupa API</div><div class="comp-desc">bcg.coupahost.com/api<br>OAuth2 bearer token<br>Called via tool handlers</div></div>
+        <div class="comp purple"><div class="comp-icon">&#129504;</div><div class="comp-title">Anthropic API</div><div class="comp-desc">claude-sonnet-4-20250514<br>Tool-use enabled<br>The agent brain</div></div>
+        <div class="comp gray"><div class="comp-icon">&#9993;</div><div class="comp-title">SMTP</div><div class="comp-desc">smtp.bcg.com<br>Escalation alerts<br>Via escalate tool</div></div>
+      </div>
+      <div class="ar"><div class="fl"></div><span class="al">&#8595; OAuth2 &middot; tool-use API &middot; SMTP</span><div class="fl"></div></div>
+      <div class="ll">Claude agentic core</div>
+      <div class="cr">
+        <div class="comp teal"><div class="comp-icon">&#9200;</div><div class="comp-title">poller.py</div><div class="comp-desc">Two async loops<br>Passes invoice_id to Claude<br>Does nothing else</div></div>
+        <div class="comp purple" style="flex:2;border:2px solid #c4b5fd"><div class="comp-icon">&#129504;</div><div class="comp-title">agent.py &mdash; Claude agentic loop (NEW)</div><div class="comp-desc">invoice_id + 12 tools &rarr; Claude decides everything<br>Up to 20 iterations &middot; full context retained<br>Writes its own Coupa comments &middot; calls store_reflection</div></div>
+        <div class="comp gray"><div class="comp-icon">&#128196;</div><div class="comp-title">system_prompt.txt</div><div class="comp-desc">Claude's instructions<br>Editable without code change<br>Controls all behaviour</div></div>
+      </div>
+      <div class="cr">
+        <div class="comp teal"><div class="comp-icon">&#128296;</div><div class="comp-title">tools/registry.py</div><div class="comp-desc">12 tool definitions<br>Claude reads descriptions<br>Decides which to call</div></div>
+        <div class="comp teal"><div class="comp-icon">&#9881;</div><div class="comp-title">tools/handlers.py</div><div class="comp-desc">Executes tool calls<br>Calls validators + Coupa API<br>Returns string to Claude</div></div>
+        <div class="comp amber"><div class="comp-icon">&#10003;</div><div class="comp-title">validators/</div><div class="comp-desc">tax_validator.py<br>wht_validator.py<br>Called via tool handlers</div></div>
+      </div>
+      <div class="ar"><div class="fl"></div><span class="al">&#8595; reads / writes</span><div class="fl"></div></div>
+      <div class="ll">Memory &amp; storage (NEW in v3.0)</div>
+      <div class="cr">
+        <div class="comp blue" style="border-color:#93c5fd"><div class="comp-icon">&#129504;</div><div class="comp-title">vendor_patterns.json</div><div class="comp-desc">Long-term agent memory<br>Vendor error history<br>Claude reads before validating</div></div>
+        <div class="comp green"><div class="comp-icon">&#128196;</div><div class="comp-title">audit_log.jsonl</div><div class="comp-desc">Full tool chain logged<br>Claude reasoning text<br>Iteration count per invoice</div></div>
+        <div class="comp green"><div class="comp-icon">&#128451;</div><div class="comp-title">state.json</div><div class="comp-desc">Invoice state<br>Re-validation queue<br>Attempt tracking</div></div>
+      </div>
+      <div class="ar"><div class="fl"></div><span class="al">&#8595; serves dashboard</span><div class="fl"></div></div>
+      <div class="ll">Monitoring</div>
+      <div class="cr">
+        <div class="comp blue"><div class="comp-icon">&#128202;</div><div class="comp-title">dashboard/app.py</div><div class="comp-desc">FastAPI &middot; port 8080<br>Shows Claude's reasoning<br>Tool chain visibility</div></div>
+        <div class="comp blue"><div class="comp-icon">&#127760;</div><div class="comp-title">index.html</div><div class="comp-desc">EP&P Ops team UI<br>Auto-refresh 60s<br>Emergency stop toggle</div></div>
+        <div class="comp gray"><div class="comp-icon">&#128101;</div><div class="comp-title">AP team (Coupa)</div><div class="comp-desc">Claude's own comments<br>Context-aware, not templated<br>Fixes &rarr; agent re-validates</div></div>
+      </div>
+      <div class="sep"></div>
+      <div class="row3">
+        <div class="card"><div class="ct">&#129504; v3.0 changes</div><div style="font-size:11px;color:#4b5563;line-height:1.8"><span style="color:#dc2626">Removed:</span> comment_builder.py<br><span style="color:#dc2626">Removed:</span> hardcoded if/else<br><br><span style="color:#16a34a">Added:</span> tools/registry.py<br><span style="color:#16a34a">Added:</span> tools/handlers.py<br><span style="color:#16a34a">Added:</span> memory/vendor_patterns.json<br><span style="color:#16a34a">Added:</span> prompts/system_prompt.txt</div></div>
+        <div class="card"><div class="ct">&#128260; Loop mechanics</div><div style="font-size:11px;color:#4b5563;line-height:1.8">Max 20 tool-call iterations<br>Claude loops until end_turn<br>All results fed back to Claude<br>Full context retained<br>Safety escalation at limit</div></div>
+        <div class="card"><div class="ct">&#9995; Emergency stop</div><div style="font-size:11px;color:#4b5563;line-height:1.8">Set <code style="background:#f3f4f6;padding:1px 4px;border-radius:3px;font-size:10px">emergency_stop:true</code><br>in agent_config.json<br>Pauses within &lt;60s<br>Dashboard toggle writes flag<br>No restart needed</div></div>
+      </div>
+    </div>
+    </div>
+
+    <!-- AGENTIC LOOP -->
+    <div class="scr" id="s-loop">
+    <div class="pad">
+      <div class="sh">Claude agentic loop &mdash; step by step</div>
+      <div class="ss">Claude receives invoice_id + 12 tools and iterates autonomously. Click any step to see the code and reasoning.</div>
+      <div class="stepper" id="stepper">
+        <div class="sn" onclick="gs(0)"><div class="sc on" id="sc0">1</div><div class="sl on" id="sl0">Poll trigger</div></div>
+        <div class="sline" id="ln0"></div>
+        <div class="sn" onclick="gs(1)"><div class="sc" id="sc1">2</div><div class="sl" id="sl1">Claude starts</div></div>
+        <div class="sline" id="ln1"></div>
+        <div class="sn" onclick="gs(2)"><div class="sc" id="sc2">3</div><div class="sl" id="sl2">Tool calls</div></div>
+        <div class="sline" id="ln2"></div>
+        <div class="sn" onclick="gs(3)"><div class="sc" id="sc3">4</div><div class="sl" id="sl3">Results back</div></div>
+        <div class="sline" id="ln3"></div>
+        <div class="sn" onclick="gs(4)"><div class="sc" id="sc4">5</div><div class="sl" id="sl4">Claude reasons</div></div>
+        <div class="sline" id="ln4"></div>
+        <div class="sn" onclick="gs(5)"><div class="sc" id="sc5">6</div><div class="sl" id="sl5">Final action</div></div>
+        <div class="sline" id="ln5"></div>
+        <div class="sn" onclick="gs(6)"><div class="sc" id="sc6">7</div><div class="sl" id="sl6">Reflection</div></div>
+        <div class="sline" id="ln6"></div>
+        <div class="sn" onclick="gs(7)"><div class="sc" id="sc7">8</div><div class="sl" id="sl7">Audit + state</div></div>
+      </div>
+      <div class="sp" id="step-panel"></div>
+      <div class="nb-row">
+        <button class="nb" id="prev-btn" onclick="ps()" disabled>&larr; Prev</button>
+        <span style="font-size:11px;color:#9ca3af">Step <span id="snum">1</span> of 8 &mdash; Claude decides, not the code</span>
+        <button class="nb p" id="next-btn" onclick="ns()">Next &rarr;</button>
+      </div>
+    </div>
+    </div>
+
+    <!-- TOOLS -->
+    <div class="scr" id="s-tools">
+    <div class="pad">
+      <div class="sh">Tool registry &mdash; 12 tools Claude calls autonomously</div>
+      <div class="ss">Claude reads each tool's description to decide which to call and when. No fixed order — Claude chooses based on context.</div>
+
+      <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:8px"><span class="badge bc">Fetch</span> &nbsp;Context gathering</div>
+      <div class="tg">
+        <div class="tc" style="border-color:#6ee7b7;background:#f0fdf4"><div class="tn">get_invoice(invoice_id)</div><div class="td">Full invoice — header, lines, tax, WHT</div><div class="tw">Always called first</div></div>
+        <div class="tc" style="border-color:#6ee7b7;background:#f0fdf4"><div class="tn">get_vendor_master(vendor_id)</div><div class="td">Vendor config — WHT codes, tax setup</div><div class="tw">When WHT codes are unfamiliar</div></div>
+        <div class="tc" style="border-color:#6ee7b7;background:#f0fdf4"><div class="tn">get_vendor_history(vendor_id)</div><div class="td">Past errors from agent memory — patterns, attempt counts</div><div class="tw">Always called early — shapes validation strategy</div></div>
+        <div class="tc" style="border-color:#6ee7b7;background:#f0fdf4"><div class="tn">check_duplicate(vendor_id, invoice_number, amount, date)</div><div class="td">Check for similar existing invoice from same vendor</div><div class="tw">Claude decides — unusual amount or vendor history</div></div>
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:8px;margin-top:4px"><span class="badge ba">Validate</span> &nbsp;Compliance checks</div>
+      <div class="tg">
+        <div class="tc" style="border-color:#fcd34d;background:#fffbeb"><div class="tn">validate_tax(invoice_id)</div><div class="td">4 rules across all invoice lines — rate, amount, code</div><div class="tw">Almost always — Claude may skip for known-clean vendors</div></div>
+        <div class="tc" style="border-color:#fcd34d;background:#fffbeb"><div class="tn">validate_wht(invoice_id)</div><div class="td">WHT codes on invoice vs vendor master allowed codes</div><div class="tw">Almost always called</div></div>
+        <div class="tc" style="border-color:#fcd34d;background:#fffbeb" style="grid-column:1/-1"><div class="tn">check_po_tolerance(invoice_id, po_id)</div><div class="td">Invoice amount vs PO value — must be within 5% tolerance</div><div class="tw">Only when a PO is referenced on the invoice</div></div>
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:8px;margin-top:4px"><span class="badge bg">Act</span> &nbsp;Coupa actions</div>
+      <div class="tg">
+        <div class="tc" style="border-color:#86efac;background:#f0fdf4"><div class="tn">post_comment(invoice_id, comment)</div><div class="td">Claude writes the comment text itself — specific, structured, contextual. No templates.</div><div class="tw">After every decision</div></div>
+        <div class="tc" style="border-color:#86efac;background:#f0fdf4"><div class="tn">submit_invoice(invoice_id)</div><div class="td">Submit for approval, clear AP hold code</div><div class="tw">Only on full pass</div></div>
+        <div class="tc" style="border-color:#86efac;background:#f0fdf4"><div class="tn">set_on_hold(invoice_id)</div><div class="td">Hold invoice, update AP hold code</div><div class="tw">Fixable errors — AP can correct</div></div>
+        <div class="tc" style="border-color:#fdba74;background:#fff7ed"><div class="tn">escalate(invoice_id, reason, urgency, escalate_to)</div><div class="td">Hold + email AP manager. For recurring issues (3+), large amounts, or systemic errors AP alone cannot fix.</div><div class="tw">Claude decides when pattern warrants escalation</div></div>
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:8px;margin-top:4px"><span class="badge bb">Learn</span> &nbsp;Memory — what makes this truly agentic</div>
+      <div class="tg">
+        <div class="tc" style="border-color:#93c5fd;background:#eff6ff;grid-column:1/-1"><div class="tn">store_reflection(invoice_id, vendor_id, action_taken, reasoning, pattern_detected, rule_suggestion)</div><div class="td">Writes to vendor_patterns.json — Claude's long-term memory. Next time this vendor's invoice arrives, Claude reads this history first and adapts its validation strategy. This is how the agent gets smarter over time.</div><div class="tw">Always called last — never skipped</div></div>
+      </div>
+
+      <div class="sep"></div>
+      <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:8px">Example: Claude's reasoning chain for a 3rd-offence invoice</div>
+      <div class="code"><span class="cm"># EY Israel — INV-2024-0461 — 3rd WHT failure in 30 days</span>
+
+<span class="cm"># Iteration 1: Claude starts with context</span>
+<span class="st">"I'll fetch the invoice and check vendor history before validating."</span>
+→ <span class="fn">get_invoice</span>(<span class="st">"461"</span>)
+→ <span class="fn">get_vendor_history</span>(<span class="st">"vendor_123"</span>)
+  <span class="cm"># Returns: 2 prior WHT failures, same code IL_Z9_99, both held</span>
+
+<span class="cm"># Iteration 2: Claude adapts — validates but anticipates escalation</span>
+<span class="st">"EY Israel failed WHT twice before. Same code. Third occurrence likely.
+I'll validate but I'm already leaning toward escalation."</span>
+→ <span class="fn">validate_tax</span>(<span class="st">"461"</span>)   <span class="cm"># Returns: PASSED</span>
+→ <span class="fn">validate_wht</span>(<span class="st">"461"</span>)   <span class="cm"># Returns: FAILED — IL_Z9_99 again</span>
+
+<span class="cm"># Iteration 3: Claude synthesises and acts differently than RPA would</span>
+<span class="st">"Third occurrence. AP held it twice, vendor master unchanged.
+This is systemic. Holding again won't fix it. ESCALATE."</span>
+→ <span class="fn">post_comment</span>(<span class="st">"461"</span>, <span class="st">"[Claude's own contextual comment — 3rd occurrence, escalated]"</span>)
+→ <span class="fn">escalate</span>(<span class="st">"461"</span>, reason=<span class="st">"3rd WHT failure — vendor master issue"</span>, urgency=<span class="st">"high"</span>)
+→ <span class="fn">store_reflection</span>(<span class="st">"461"</span>, pattern=<span class="st">"Recurring IL_Z9_99 — needs vendor master fix"</span>)
+
+<span class="cm"># RPA would have held it for the 3rd time. Claude escalated.
+# Total: 7 tool calls across 3 iterations.</span></div>
+    </div>
+    </div>
+
+    <!-- VALIDATORS -->
+    <div class="scr" id="s-valid">
+    <div class="pad">
+      <div class="sh">Validation rules &mdash; called as tools by Claude</div>
+      <div class="ss">Validators are unchanged from v2.0 — now invoked via tool handlers rather than hardcoded calls. Claude decides when to run each.</div>
+      <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:10px">&#129534; Tax validator &mdash; 4 rules</div>
+      <div class="rc"><div class="rh"><div class="rt"><span class="badge ba">Rule 1a</span>Tax rate vs master rate</div><span class="badge br">Blocks</span></div><div class="rb">Checks the tax rate on the invoice line matches the rate configured on the tax code in Coupa master data.</div><div class="re"><div class="rx"><div class="rxl">Line rate</div><div class="rxv e">20%</div></div><div class="rx"><div class="rxl">Master (IL_VAT_17)</div><div class="rxv">17%</div></div><div class="rx"><div class="rxl">Result</div><div class="rxv e">FAIL</div></div></div><div class="code"><span class="kw">if</span> line_tax_rate != line_tax_rate_expected:
+    findings.append(<span class="st">f"Line {"{"}line_num{"}"}: rate {"{"}line_tax_rate{"}"}% ≠ master {"{"}line_tax_rate_expected{"}"}%"</span>)</div></div>
+      <div class="rc"><div class="rh"><div class="rt"><span class="badge ba">Rule 1b</span>Zero-rate code, non-zero amount</div><span class="badge br">Blocks</span></div><div class="rb">Catches zero-rate tax codes (EXEMPT, ZERO) where a non-zero tax amount was entered.</div><div class="code"><span class="kw">if</span> line_tax_rate_expected == <span class="nu">0</span> <span class="kw">and</span> line_tax_amount > <span class="nu">0</span>:
+    findings.append(<span class="st">f"Line {"{"}line_num{"}"}: '{"{"}line_tax_code{"}"}' is 0% but amount {"{"}line_tax_amount{"}"} entered"</span>)</div></div>
+      <div class="rc"><div class="rh"><div class="rt"><span class="badge ba">Rule 1c</span>Tax amount vs master rate</div><span class="badge br">Blocks</span></div><div class="rb">Verifies tax amount is mathematically consistent with master rate × line total. Tolerance ±0.05.</div><div class="code">expected = <span class="fn">round</span>(line_total * line_tax_rate_expected / <span class="nu">100</span>, <span class="nu">2</span>)
+<span class="kw">if</span> <span class="fn">abs</span>(line_tax_amount - expected) > <span class="nu">0.05</span>:
+    findings.append(<span class="st">f"Line {"{"}line_num{"}"}: {"{"}line_tax_amount{"}"} ≠ expected {"{"}expected{"}"}"</span>)</div></div>
+      <div class="rc"><div class="rh"><div class="rt"><span class="badge ba">Rule 2</span>Tax amount vs line rate</div><span class="badge br">Blocks</span></div><div class="rb">Checks amount consistency with the rate actually entered on the line. Catches rounding errors and manual overrides.</div><div class="code">expected = <span class="fn">round</span>(line_total * line_tax_rate / <span class="nu">100</span>, <span class="nu">2</span>)
+<span class="kw">if</span> <span class="fn">abs</span>(line_tax_amount - expected) > <span class="nu">0.05</span>:
+    findings.append(<span class="st">f"{"{"}line_tax_rate{"}"}% of {"{"}line_total{"}"} = {"{"}expected{"}"}, got {"{"}line_tax_amount{"}"}"</span>)</div></div>
+      <div class="sep"></div>
+      <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:10px">&#9878; WHT validator</div>
+      <div class="rc"><div class="rh"><div class="rt"><span class="badge br">Rule WHT-1</span>Unauthorised WHT code</div><span class="badge br">Blocks</span></div><div class="rb">Compares all WHT codes applied on the invoice (header + all lines) against vendor master allowed codes.</div><div class="re"><div class="rx"><div class="rxl">Vendor allows</div><div class="rxv o">IL_Z0_00, IL_Z1_10</div></div><div class="rx"><div class="rxl">Applied</div><div class="rxv e">IL_Z9_99</div></div><div class="rx"><div class="rxl">Result</div><div class="rxv e">FAIL</div></div></div><div class="code">unauthorised = [c <span class="kw">for</span> c <span class="kw">in</span> applied_codes <span class="kw">if</span> c <span class="kw">not in</span> vendor_codes]
+<span class="kw">if</span> unauthorised:
+    findings.append(<span class="st">f"Unauthorised: {"{"}unauthorised{"}"} — allowed: {"{"}vendor_codes{"}"}"</span>)</div></div>
+      <div class="sep"></div>
+      <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:8px">How validators are invoked in v3.0</div>
+      <div class="code"><span class="cm"># Validators called via tool handlers — not hardcoded in agent.py</span>
+<span class="kw">async def</span> <span class="fn">handle_validate_tax</span>(invoice_id: <span class="cl">str</span>) -> <span class="cl">str</span>:
+    invoice = <span class="kw">await</span> coupa_client.<span class="fn">get_invoice</span>(invoice_id)
+    lines   = <span class="kw">await</span> coupa_client.<span class="fn">get_invoice_lines</span>(invoice_id)
+    result  = <span class="kw">await</span> tax_validator.<span class="fn">validate</span>(invoice, lines)
+    <span class="kw">return</span> json.<span class="fn">dumps</span>(result.dict())  <span class="cm"># string returned to Claude</span>
+
+<span class="cm"># Claude calls both tools — handlers run them in parallel internally</span>
+<span class="cm"># Result: Claude sees "Tax: PASSED" and "WHT: FAILED — IL_Z9_99"</span>
+<span class="cm"># Claude then reasons about what those results mean in context</span></div>
+    </div>
+    </div>
+
+    <!-- INFRA -->
+    <div class="scr" id="s-infra">
+    <div class="pad">
+      <div class="sh">Infrastructure &amp; deployment</div>
+      <div class="ss">Server requirements, process management, and v3.0 tech stack</div>
+      <div class="ll" style="margin-bottom:8px">Server requirements</div>
+      <div class="ib">
+        <div class="ibl"><div class="ii">&#128187;</div><div class="it">Compute</div><div class="id">1 vCPU &middot; 2GB RAM<br>Ubuntu 22.04 LTS<br>BCG internal VM</div></div>
+        <div class="ibl"><div class="ii">&#128451;</div><div class="it">Storage</div><div class="id">10GB disk<br>vendor_patterns grows over time<br>Logs rotate weekly</div></div>
+        <div class="ibl"><div class="ii">&#127760;</div><div class="it">Network</div><div class="id">BCG VPN only<br>Outbound: Coupa + Anthropic<br>Port 8080 dashboard</div></div>
+        <div class="ibl"><div class="ii">&#128274;</div><div class="it">Secrets</div><div class="id">.env file on server<br>COUPA_CLIENT_ID/SECRET<br>ANTHROPIC_API_KEY</div></div>
+      </div>
+      <div class="sep"></div>
+      <div class="ll" style="margin-bottom:8px">Systemd service</div>
+      <div class="code">[Unit]
+<span class="fn">Description</span>=Coupa Invoice Validation Agent v3.0 (True Agentic AI)
+<span class="fn">After</span>=network.target
+
+[Service]
+<span class="fn">Type</span>=simple
+<span class="fn">User</span>=coupa-agent
+<span class="fn">WorkingDirectory</span>=<span class="st">/opt/coupa-invoice-agent</span>
+<span class="fn">ExecStart</span>=<span class="st">/opt/coupa-invoice-agent/venv/bin/python main.py</span>
+<span class="fn">Restart</span>=always
+<span class="fn">RestartSec</span>=<span class="nu">10</span>
+<span class="fn">EnvironmentFile</span>=<span class="st">/opt/coupa-invoice-agent/.env</span>
+
+[Install]
+<span class="fn">WantedBy</span>=multi-user.target</div>
+      <div style="font-size:11px;color:#6b7280;margin:6px 0 14px">Auto-restarts on crash &middot; starts on boot &middot; dedicated low-privilege user</div>
+      <div class="row2">
+        <div class="card"><div class="ct">&#9998; Management</div><div class="code"><span class="cm"># Start</span>
+systemctl <span class="fn">enable</span> coupa-agent
+systemctl <span class="fn">start</span>  coupa-agent
+
+<span class="cm"># Monitor</span>
+systemctl <span class="fn">status</span> coupa-agent
+journalctl -u coupa-agent -f
+
+<span class="cm"># Tune Claude (no restart needed)</span>
+nano prompts/system_prompt.txt
+
+<span class="cm"># Stop</span>
+systemctl <span class="fn">stop</span> coupa-agent</div></div>
+        <div class="card"><div class="ct">&#128196; Files (v3.0 additions)</div><div class="code"><span class="cm"># Runtime log</span>
+logs/agent.log
+
+<span class="cm"># Audit — now includes tool chain + reasoning</span>
+logs/audit_log.jsonl
+
+<span class="cm"># Agent long-term memory (NEW)</span>
+memory/vendor_patterns.json
+
+<span class="cm"># Reflection log (NEW)</span>
+memory/agent_reflections.jsonl
+
+<span class="cm"># Invoice state</span>
+logs/state.json
+
+<span class="cm"># System prompt (editable)</span>
+prompts/system_prompt.txt</div></div>
+      </div>
+      <div class="sep"></div>
+      <div class="ll" style="margin-bottom:8px">Tech stack v3.0</div>
+      <div class="card">
+        <table class="st2">
+          <tr><td>Agent architecture</td><td>Anthropic tool-use API &middot; Claude as orchestrator &middot; up to 20 iterations per invoice</td></tr>
+          <tr><td>AI model</td><td>claude-sonnet-4-20250514 &middot; tool_use enabled &middot; max_tokens 4096</td></tr>
+          <tr><td>Language</td><td>Python 3.11+ &middot; asyncio &middot; two concurrent poller loops</td></tr>
+          <tr><td>HTTP client</td><td>httpx (async) &middot; OAuth2 token management &middot; retry with backoff</td></tr>
+          <tr><td>Data models</td><td>Pydantic v2 &middot; ValidationResult, InvoiceState, ToolResult</td></tr>
+          <tr><td>Dashboard server</td><td>FastAPI + uvicorn &middot; port 8080 &middot; shows Claude reasoning chain</td></tr>
+          <tr><td>Agent memory</td><td>vendor_patterns.json (long-term) &middot; agent_reflections.jsonl</td></tr>
+          <tr><td>System prompt</td><td>prompts/system_prompt.txt &middot; editable without code change</td></tr>
+          <tr><td>Logging</td><td>loguru &middot; JSONL audit log with full tool chain &amp; Claude reasoning</td></tr>
+          <tr><td>pip dependencies</td><td>anthropic&gt;=0.40.0 &middot; httpx &middot; pydantic &middot; fastapi &middot; uvicorn &middot; loguru &middot; python-dotenv</td></tr>
+          <tr><td>Removed in v3.0</td><td>comment_builder.py (Claude writes comments) &middot; hardcoded if/else logic</td></tr>
+        </table>
+      </div>
+    </div>
+    </div>
+  </div>
+  <div class="pf">Coupa Invoice Validation Agent &nbsp;&middot;&nbsp; Technical Design v3.0 &nbsp;&middot;&nbsp; True agentic AI &nbsp;&middot;&nbsp; BCG Internal &nbsp;&middot;&nbsp; May 2026</div>
+</div>
+
+<script>
+function sw(n,b){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.getElementById('s-'+n).classList.add('on');b.classList.add('on');}
+const steps=[
+  {title:'Step 1 — poller triggers Claude',badge:'bc',bl:'poller.py',body:'The poller finds a draft invoice. That\'s all it does — passes the invoice_id to agent.process_invoice() and steps back. From here Claude owns the entire process.',code:`<span class="kw">async def</span> <span class="fn">new_invoice_loop</span>():
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="kw">if</span> state_manager.<span class="fn">is_emergency_stop</span>(): <span class="kw">await</span> asyncio.<span class="fn">sleep</span>(<span class="nu">60</span>); <span class="kw">continue</span>
+        invoices = <span class="kw">await</span> coupa_client.<span class="fn">get_invoices</span>(
+            status=<span class="st">"draft"</span>, ap_hold_code=<span class="st">"Pending Agent Review"</span>
+        )
+        <span class="kw">for</span> inv <span class="kw">in</span> invoices:
+            <span class="kw">await</span> agent.<span class="fn">process_invoice</span>(inv[<span class="st">"id"</span>])  <span class="cm"># Claude takes over</span>
+        <span class="kw">await</span> asyncio.<span class="fn">sleep</span>(<span class="nu">600</span>)`},
+  {title:'Step 2 — Claude receives invoice_id + 12 tools',badge:'bp',bl:'agent.py',body:'Claude is given the invoice_id, attempt number, and 12 tool definitions. It reads each tool\'s description to understand what is available. No instructions on order — Claude decides.',code:`response = <span class="kw">await</span> client.messages.<span class="fn">create</span>(
+    model=<span class="st">"claude-sonnet-4-20250514"</span>,
+    max_tokens=<span class="nu">4096</span>,
+    system=<span class="fn">Path</span>(<span class="st">"prompts/system_prompt.txt"</span>).<span class="fn">read_text</span>(),
+    tools=TOOL_DEFINITIONS,   <span class="cm"># 12 tools — Claude reads descriptions</span>
+    messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">f"""
+Invoice ID: {invoice_id}
+Attempt: {attempt}
+Please validate this invoice and take the appropriate action.
+"""</span>}]
+)`},
+  {title:'Step 3 — Claude autonomously calls tools',badge:'bp',bl:'agent.py · tools/handlers.py',body:'Claude decides which tools to call based on what it finds. The code executes whatever Claude requests and returns results as strings. No hardcoded sequence.',code:`<span class="kw">for</span> block <span class="kw">in</span> response.content:
+    <span class="kw">if</span> block.type != <span class="st">"tool_use"</span>: <span class="kw">continue</span>
+
+    logger.<span class="fn">info</span>(<span class="st">f"Claude calling: {block.name}({block.input})"</span>)
+    tool_calls_made.<span class="fn">append</span>({<span class="st">"tool"</span>: block.name, <span class="st">"input"</span>: block.input})
+
+    result = <span class="kw">await</span> <span class="fn">execute_tool</span>(block.name, block.input)
+
+    tool_results.<span class="fn">append</span>({
+        <span class="st">"type"</span>:        <span class="st">"tool_result"</span>,
+        <span class="st">"tool_use_id"</span>: block.id,
+        <span class="st">"content"</span>:     <span class="fn">str</span>(result)   <span class="cm"># returned as string to Claude</span>
+    })`},
+  {title:'Step 4 — results fed back into Claude\'s context',badge:'bp',bl:'agent.py',body:'Every tool result is appended to message history and sent back to Claude. Full context retained across all iterations — Claude remembers everything it found.',code:`<span class="cm"># Append Claude's tool calls</span>
+messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: response.content})
+
+<span class="cm"># Append tool results — Claude reads these in next iteration</span>
+messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: tool_results})
+
+<span class="cm"># Claude now has full context:
+# - What tools it called and what each returned
+# - Its own prior reasoning text
+# Next API call continues from here with complete history</span>
+
+response = <span class="kw">await</span> client.messages.<span class="fn">create</span>(
+    model=<span class="st">"claude-sonnet-4-20250514"</span>,
+    tools=TOOL_DEFINITIONS,
+    messages=messages   <span class="cm"># full growing history</span>
+)`},
+  {title:'Step 5 — Claude reasons about what it found',badge:'bp',bl:'Claude reasoning',body:'With all tool results in context, Claude synthesises findings — not just listing errors, but reasoning about them. Recurring pattern or one-off? Data-entry or systemic? Escalate or hold?',code:`<span class="cm"># Example Claude reasoning (logged in full to audit trail)</span>
+<span class="st">"""
+Tax validation passed on all 3 lines.
+
+WHT validation failed: IL_Z9_99 applied but not in vendor master.
+Vendor master allows: IL_Z0_00, IL_Z1_10.
+
+Vendor history shows this is the 3rd occurrence in 30 days.
+AP held it twice — vendor master has not been corrected.
+
+This is not a data-entry error. It is a systemic vendor master
+issue. Holding the invoice again would not resolve it.
+
+Decision: ESCALATE to AP manager with urgency HIGH.
+Include pattern context — AP manager needs to update vendor master.
+"""</span>`},
+  {title:'Step 6 — Claude takes final action',badge:'bg',bl:'agent.py · coupa_client.py',body:'Claude calls action tools — post_comment with text it wrote itself, then submit, hold, or escalate. The comment is specific to what Claude found — no template.',code:`<span class="cm"># Claude calls post_comment with its OWN written text</span>
+<span class="cm"># Example of what Claude might write:</span>
+<span class="st">"""
+⚠️ Invoice Validation — 3rd Occurrence — Escalated
+
+Tax:  PASSED — all 3 lines correct
+WHT:  FAILED — IL_Z9_99 not in vendor master
+      Allowed: IL_Z0_00, IL_Z1_10
+
+This is the 3rd WHT failure from EY Israel in 30 days.
+Root cause: vendor master data — not a data-entry error.
+Invoice escalated to AP manager.
+
+Action: Update EY Israel vendor master WHT codes.
+Validated by: Coupa Validation Agent v3.0
+"""</span>
+→ <span class="fn">escalate</span>(invoice_id, reason=<span class="st">"3rd WHT failure"</span>, urgency=<span class="st">"high"</span>)`},
+  {title:'Step 7 — Claude stores reflection',badge:'bb',bl:'tools/handlers.py · memory/',body:'Claude always calls store_reflection last. This writes to vendor_patterns.json. Next time an EY Israel invoice arrives, Claude reads this and knows to look for the WHT pattern before validating.',code:`<span class="cm"># Written to memory/vendor_patterns.json</span>
+{
+  <span class="st">"vendor_id"</span>:     <span class="st">"vendor_123"</span>,
+  <span class="st">"vendor_name"</span>:   <span class="st">"EY Israel Ltd"</span>,
+  <span class="st">"total_failures"</span>: <span class="nu">3</span>,
+  <span class="st">"last_action"</span>:   <span class="st">"escalated"</span>,
+  <span class="st">"patterns"</span>: [
+    <span class="st">"Recurring WHT code IL_Z9_99 — not in vendor master"</span>,
+    <span class="st">"Tax always passes — WHT is the only issue"</span>
+  ],
+  <span class="st">"rule_suggestions"</span>: [
+    <span class="st">"Auto-escalate after 2nd WHT failure for this vendor"</span>
+  ],
+  <span class="st">"history"</span>: [...]
+}
+
+<span class="cm"># Next EY Israel invoice — Claude reads this FIRST
+# and adjusts its validation strategy proactively</span>`},
+  {title:'Step 8 — audit log + state update',badge:'bg',bl:'audit_logger.py · state_manager.py',body:'Full audit entry written — including Claude\'s complete reasoning text, every tool call made, and iteration count. Invoice state updated. Failed invoices enter re-validation queue for Loop 2.',code:`<span class="kw">await</span> audit_logger.<span class="fn">log</span>({
+    <span class="st">"timestamp"</span>:        <span class="fn">utcnow</span>(),
+    <span class="st">"invoice_id"</span>:       invoice_id,
+    <span class="st">"agent_type"</span>:       <span class="st">"true_agentic_claude_tool_use"</span>,
+    <span class="st">"model"</span>:            <span class="st">"claude-sonnet-4-20250514"</span>,
+    <span class="st">"action_taken"</span>:     final_action,
+    <span class="st">"tool_calls"</span>:       tool_calls_made,   <span class="cm"># full chain</span>
+    <span class="st">"total_iterations"</span>: iteration + <span class="nu">1</span>,
+    <span class="st">"claude_reasoning"</span>: claude_reasoning,  <span class="cm"># full text</span>
+    <span class="st">"attempt"</span>:          attempt
+})`},
+];
+let cur=0;
+function render(i){
+  const d=steps[i];
+  document.getElementById('step-panel').innerHTML=`<div class="sp-h"><span class="badge ${d.badge}">${d.bl}</span>${d.title}</div><div class="sp-b">${d.body}</div><div class="code">${d.code}</div>`;
+  document.getElementById('snum').textContent=i+1;
+  document.getElementById('prev-btn').disabled=i===0;
+  document.getElementById('next-btn').disabled=i===steps.length-1;
+  document.querySelectorAll('.sc').forEach((el,idx)=>{el.className='sc'+(idx<i?' done':idx===i?' on':'');});
+  document.querySelectorAll('.sl').forEach((el,idx)=>{el.className='sl'+(idx<i?' done':idx===i?' on':'');});
+  document.querySelectorAll('.sline').forEach((el,idx)=>{el.className='sline'+(idx<i?' done':'');});
+}
+function gs(i){cur=i;render(i);}
+function ns(){if(cur<steps.length-1){cur++;render(cur);}}
+function ps(){if(cur>0){cur--;render(cur);}}
+render(0);
+</script>
+</body>
+</html>

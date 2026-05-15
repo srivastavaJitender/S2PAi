@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPA vs Agentic AI — Coupa Invoice Validation</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;min-height:100vh;padding:24px 16px;color:#111827}
+.outer{max-width:940px;margin:0 auto}
+.proto-wrap{border:1px solid #d1d5db;border-radius:12px;overflow:hidden;background:#fff}
+/* NAV */
+.nav{background:#0a1f3c;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:50px;gap:8px;flex-wrap:wrap}
+.brand{color:#fff;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+.brand-sub{color:#7aafd4;font-size:11px}
+.tabs{display:flex;gap:2px}
+.tab{color:#8aaac8;font-size:11px;padding:5px 12px;border:none;background:transparent;border-radius:4px;cursor:pointer;transition:.15s;white-space:nowrap}
+.tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tab.on{color:#fff;background:rgba(255,255,255,.15)}
+.scr{display:none}.scr.on{display:block;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.pad{padding:20px 24px}
+.sh{font-size:15px;font-weight:600;color:#111827;margin-bottom:3px}
+.ss{font-size:12px;color:#6b7280;margin-bottom:18px}
+/* COMPARISON TABLE */
+.ctbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;margin-bottom:16px}
+.ctbl th{padding:10px 12px;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;text-align:left}
+.ctbl th.rpa{background:#fef2f2;color:#991b1b}
+.ctbl th.agt{background:#f5f3ff;color:#5b21b6}
+.ctbl th:first-child{background:#f9fafb;color:#6b7280;width:170px}
+.ctbl td{padding:9px 12px;border-bottom:1px solid #f3f4f6;vertical-align:top;font-size:12px}
+.ctbl td:first-child{color:#6b7280;font-weight:600;background:#f9fafb;font-size:11px}
+.ctbl td.rc{background:#fff8f8;color:#7f1d1d}
+.ctbl td.ac{background:#f5f3ff;color:#3730a3}
+.ctbl tr:last-child td{border-bottom:none}
+.pill{display:inline-flex;align-items:center;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;margin-bottom:3px;white-space:nowrap}
+.pr{background:#fee2e2;color:#991b1b}
+.pg{background:#dcfce7;color:#166534}
+.pa{background:#fef3c7;color:#92400e}
+/* BENEFIT GRID */
+.bgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px}
+.bcard{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.bicon{font-size:20px;color:#6b7280}
+.btitle{font-size:12px;font-weight:600;color:#111827}
+.bdesc{font-size:11px;color:#4b5563;line-height:1.65;flex:1}
+.bmet{font-size:20px;font-weight:600;margin-top:4px}
+.bmet.g{color:#16a34a}.bmet.b{color:#1d4ed8}.bmet.p{color:#5b21b6}
+/* SCENARIO */
+.scen{border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:8px}
+.shead{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;background:#fff}
+.shead:hover{background:#f9fafb}
+.slbl{font-size:12px;font-weight:600;color:#111827;flex:1}
+.sbadges{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap}
+.sbody{display:none;padding:0 14px 12px;background:#fff}
+.sbody.o{display:block}
+.srow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+@media(max-width:560px){.srow{grid-template-columns:1fr}}
+.scol{border-radius:6px;padding:10px 12px;font-size:11px;line-height:1.7}
+.scol.r{background:#fef2f2;color:#7f1d1d}
+.scol.g{background:#f0fdf4;color:#14532d}
+.scol-lbl{font-weight:700;margin-bottom:4px;font-size:11px}
+.chev{font-size:13px;color:#9ca3af;transition:transform .2s;flex-shrink:0}
+.chev.o{transform:rotate(180deg)}
+/* MATURITY */
+.mat2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:560px){.mat2{grid-template-columns:1fr}}
+.mcard{border:1px solid #e5e7eb;border-radius:10px;padding:14px}
+.mtitle{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.mrow{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11px;color:#4b5563}
+.mbar-bg{flex:1;height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden}
+.mbar{height:100%;border-radius:3px}
+.mval{font-size:11px;font-weight:600;min-width:30px;text-align:right}
+.evol{display:flex;gap:0;margin-bottom:14px;overflow-x:auto}
+.estep{flex:1;min-width:120px;padding:12px 10px;background:#fff;border:1px solid #e5e7eb;font-size:11px;text-align:center}
+.estep+.estep{border-left:none}
+.estep:first-child{border-radius:8px 0 0 8px}
+.estep:last-child{border-radius:0 8px 8px 0}
+.estep.active{background:#f5f3ff;border-color:#c4b5fd}
+.estep-title{font-weight:600;color:#111827;margin-bottom:3px;font-size:12px}
+.estep.active .estep-title{color:#5b21b6}
+.estep-sub{color:#6b7280;font-size:10px;line-height:1.5}
+.estep-tag{display:inline-block;font-size:10px;margin-top:5px;padding:2px 7px;border-radius:4px;background:#f3f4f6;color:#6b7280;font-weight:500}
+.estep.active .estep-tag{background:#5b21b6;color:#fff}
+/* SHARED */
+.info-box{background:#f9fafb;border-radius:8px;padding:12px 14px;font-size:12px;color:#4b5563;line-height:1.7;margin-bottom:0;display:flex;align-items:flex-start;gap:8px}
+.hb{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;text-decoration:none}
+.hb:hover{background:#f9fafb}
+.pf{text-align:center;margin-top:14px;font-size:11px;color:#9ca3af}
+.sep{height:1px;background:#e5e7eb;margin:14px 0}
+.kpi3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+@media(max-width:480px){.kpi3{grid-template-columns:1fr}}
+.kpi3-item{background:#f9fafb;border-radius:8px;padding:10px;text-align:center}
+.kpi3-val{font-size:20px;font-weight:600}
+.kpi3-lbl{font-size:11px;color:#6b7280;margin-top:3px}
+</style>
+</head>
+<body>
+<div class="outer">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="index.html" class="hb">&#8592; Home</a>
+      <div>
+        <p style="font-size:13px;font-weight:600;color:#374151">BCG Internal &nbsp;&middot;&nbsp; EP&P Ops</p>
+        <p style="font-size:11px;color:#9ca3af;margin-top:1px">RPA vs Agentic AI &nbsp;&middot;&nbsp; Comparison &nbsp;&middot;&nbsp; Confidential</p>
+      </div>
+    </div>
+    <span style="font-size:11px;color:#5b21b6;background:#f5f3ff;border:1px solid #c4b5fd;padding:5px 14px;border-radius:20px;font-weight:600">&#129504; Why agentic AI wins</span>
+  </div>
+
+  <div class="proto-wrap">
+    <div class="nav">
+      <div class="brand">&#129504; RPA vs Agentic AI &mdash; Coupa Invoice Validation <span class="brand-sub">comparison &amp; benefits</span></div>
+      <div class="tabs">
+        <button class="tab on" onclick="sw('compare',this)">&#8596; Capabilities</button>
+        <button class="tab" onclick="sw('benefits',this)">&#9650; Benefits</button>
+        <button class="tab" onclick="sw('scenarios',this)">&#128196; Scenarios</button>
+        <button class="tab" onclick="sw('maturity',this)">&#128640; Maturity</button>
+      </div>
+    </div>
+
+    <!-- CAPABILITIES -->
+    <div class="scr on" id="s-compare">
+    <div class="pad">
+      <div class="sh">Capability comparison — RPA vs agentic AI</div>
+      <div class="ss">11 dimensions where agentic AI fundamentally changes what's possible</div>
+      <table class="ctbl">
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th class="rpa">&#129302; RPA — old design</th>
+            <th class="agt">&#129504; Agentic AI — v3.0</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>How it starts</td><td class="rc"><span class="pill pa">Fixed schedule</span><br>Runs same sequence every time regardless of context</td><td class="ac"><span class="pill pg">Event-driven</span><br>Adapts based on what it discovers about each invoice</td></tr>
+          <tr><td>Decision making</td><td class="rc"><span class="pill pr">Hardcoded if/else</span><br>No judgment — rule exists or it doesn't</td><td class="ac"><span class="pill pg">Claude reasoning</span><br>Synthesises context, weighs severity, applies judgment</td></tr>
+          <tr><td>Tool selection</td><td class="rc"><span class="pill pr">Fixed order</span><br>Always: tax &#8594; WHT &#8594; if/else. No variation.</td><td class="ac"><span class="pill pg">Autonomous</span><br>Claude picks which tools to call and in what order</td></tr>
+          <tr><td>Coupa comments</td><td class="rc"><span class="pill pa">Template-based</span><br>"Tax validation failed. Please review and resubmit."</td><td class="ac"><span class="pill pg">Claude-written</span><br>Exact line, code, amount, corrective step — every time</td></tr>
+          <tr><td>Recurring failures</td><td class="rc"><span class="pill pr">Holds every time</span><br>No pattern recognition — same action on attempt 10 as attempt 1</td><td class="ac"><span class="pill pg">Escalates on pattern</span><br>3rd failure &#8594; escalates to AP manager with context</td></tr>
+          <tr><td>Novel situations</td><td class="rc"><span class="pill pr">Fails or wrong action</span><br>No rule = no handling. Requires developer intervention.</td><td class="ac"><span class="pill pg">Reasons through it</span><br>Claude applies judgment to cases outside defined rules</td></tr>
+          <tr><td>Memory</td><td class="rc"><span class="pill pr">None</span><br>Every invoice treated as the first ever from that vendor</td><td class="ac"><span class="pill pg">Long-term memory</span><br>vendor_patterns.json grows with every invoice processed</td></tr>
+          <tr><td>Learning over time</td><td class="rc"><span class="pill pr">Never improves</span><br>Same behaviour on day 1 and day 365</td><td class="ac"><span class="pill pg">Improves continuously</span><br>store_reflection builds vendor intelligence automatically</td></tr>
+          <tr><td>Role of Claude</td><td class="rc"><span class="pill pa">Last resort tiebreaker</span><br>Called only on ambiguous edge cases</td><td class="ac"><span class="pill pg">Full orchestrator</span><br>Owns the entire process from invoice receipt to action</td></tr>
+          <tr><td>Adaptable without code</td><td class="rc"><span class="pill pr">No</span><br>Developer must update rules in Python code</td><td class="ac"><span class="pill pg">Yes — edit prompt</span><br>Edit system_prompt.txt — behaviour changes immediately</td></tr>
+          <tr><td>Handles credit notes / exceptions</td><td class="rc"><span class="pill pr">No</span><br>Not in rules = crashes or wrong outcome</td><td class="ac"><span class="pill pg">Yes</span><br>Claude detects type and adapts validation approach</td></tr>
+        </tbody>
+      </table>
+      <div class="info-box">
+        <span style="font-size:16px;flex-shrink:0">&#128161;</span>
+        <div><strong>The fundamental shift:</strong> In RPA, developers decide what to do and encode it as rules — Claude confirms. In agentic AI, Claude decides what to do and developers provide the tools it can use. Intelligence moves from the code into Claude.</div>
+      </div>
+    </div>
+    </div>
+
+    <!-- BENEFITS -->
+    <div class="scr" id="s-benefits">
+    <div class="pad">
+      <div class="sh">Business benefits — agentic AI vs RPA</div>
+      <div class="ss">Quantified and qualitative gains from upgrading to the true agentic v3.0 architecture</div>
+      <div class="bgrid">
+        <div class="bcard">
+          <div class="bicon">&#9200;</div>
+          <div class="btitle">Manual review time saved</div>
+          <div class="bdesc">AP team no longer manually checks tax and WHT codes before Coupa submission. Agent handles every invoice instantly, 24/7, with no human trigger needed.</div>
+          <div class="bmet g">~750 hrs / yr</div>
+        </div>
+        <div class="bcard">
+          <div class="bicon">&#128737;</div>
+          <div class="btitle">SAP rejections prevented</div>
+          <div class="bdesc">Every tax and WHT error caught before reaching SAP. Each SAP rejection costs ~4 hours of rework across AP, finance, and vendor teams.</div>
+          <div class="bmet g">Zero SAP errors</div>
+        </div>
+        <div class="bcard">
+          <div class="bicon">&#9889;</div>
+          <div class="btitle">Invoice cycle time</div>
+          <div class="bdesc">Passing invoices auto-submitted within 10 minutes of arriving in Coupa. No waiting for AP team availability or business hours.</div>
+          <div class="bmet b">10 min vs 48 hrs</div>
+        </div>
+        <div class="bcard">
+          <div class="bicon">&#129504;</div>
+          <div class="btitle">Pattern detection</div>
+          <div class="bdesc">Agentic AI detects recurring vendor errors that RPA cannot see. 3rd WHT failure from same vendor &#8594; escalate instead of hold again and again.</div>
+          <div class="bmet p">Learns every invoice</div>
+        </div>
+        <div class="bcard">
+          <div class="bicon">&#128065;</div>
+          <div class="btitle">Full audit trail</div>
+          <div class="bdesc">Every decision logged with Claude's complete reasoning, full tool chain, and iteration count. Complete traceability for audit and compliance.</div>
+          <div class="bmet b">100% traceable</div>
+        </div>
+        <div class="bcard">
+          <div class="bicon">&#128172;</div>
+          <div class="btitle">Comment quality</div>
+          <div class="bdesc">Claude writes its own Coupa comments — not templates. AP team gets exact line numbers, codes, amounts, and corrective steps in plain language.</div>
+          <div class="bmet g">Specific &amp; actionable</div>
+        </div>
+        <div class="bcard">
+          <div class="bicon">&#9995;</div>
+          <div class="btitle">Human override</div>
+          <div class="bdesc">Emergency stop via config flag — pauses agent within 60 seconds with no code change or restart. Full control retained by ops team at all times.</div>
+          <div class="bmet b">One-flag pause</div>
+        </div>
+        <div class="bcard">
+          <div class="bicon">&#9881;</div>
+          <div class="btitle">Zero-code tuning</div>
+          <div class="bdesc">Agent behaviour tuned by editing system_prompt.txt — no developer needed. Business rules adjusted in minutes as requirements evolve.</div>
+          <div class="bmet g">Prompt-level control</div>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div style="font-size:12px;font-weight:600;color:#111827;margin-bottom:10px">Estimated annual value — Phase 1</div>
+      <div class="kpi3">
+        <div class="kpi3-item"><div class="kpi3-val" style="color:#16a34a">750 hrs</div><div class="kpi3-lbl">AP team time saved per year</div></div>
+        <div class="kpi3-item"><div class="kpi3-val" style="color:#16a34a">~200</div><div class="kpi3-lbl">SAP errors prevented per year</div></div>
+        <div class="kpi3-item"><div class="kpi3-val" style="color:#1d4ed8">93%</div><div class="kpi3-lbl">Estimated all-time pass rate</div></div>
+      </div>
+    </div>
+    </div>
+
+    <!-- SCENARIOS -->
+    <div class="scr" id="s-scenarios">
+    <div class="pad">
+      <div class="sh">Real-world scenarios — how each approach handles them</div>
+      <div class="ss">Click each scenario to see how RPA and agentic AI respond differently</div>
+
+      <div class="scen">
+        <div class="shead" onclick="tog(0)">
+          <span style="font-size:15px;flex-shrink:0">&#128196;</span>
+          <span class="slbl">Standard invoice — tax and WHT errors found</span>
+          <div class="sbadges"><span class="pill pa" style="font-size:10px">RPA: generic hold</span><span class="pill pg" style="font-size:10px">Agent: contextual hold</span></div>
+          <span class="chev" id="c0">&#8964;</span>
+        </div>
+        <div class="sbody" id="b0">
+          <div class="srow">
+            <div class="scol r"><div class="scol-lbl">&#129302; RPA response</div>Runs tax &#8594; WHT in fixed order. Finds errors. Posts generic template: "Tax validation failed. Please review and resubmit." Sets on-hold. No context. No line-level detail. AP team has to go back into Coupa to figure out what's wrong.</div>
+            <div class="scol g"><div class="scol-lbl">&#129504; Agentic AI response</div>Claude fetches invoice, reads vendor history first. Runs validators it decides are relevant. Writes specific comment: "Line 2: tax rate 20% &#8800; IL_VAT_17 master rate 17%. Line 3: WHT IL_Z9_99 not in vendor master — allowed: IL_Z0_00, IL_Z1_10." AP team knows exactly what to fix.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scen">
+        <div class="shead" onclick="tog(1)">
+          <span style="font-size:15px;flex-shrink:0">&#128260;</span>
+          <span class="slbl">3rd failure from same vendor in 30 days</span>
+          <div class="sbadges"><span class="pill pr" style="font-size:10px">RPA: holds again</span><span class="pill pg" style="font-size:10px">Agent: escalates</span></div>
+          <span class="chev" id="c1">&#8964;</span>
+        </div>
+        <div class="sbody" id="b1">
+          <div class="srow">
+            <div class="scol r"><div class="scol-lbl">&#129302; RPA response</div>No memory of previous failures. Treats this exactly like invoice 1. Holds it again with the same template comment. AP team sees the same error for the 3rd time. Pattern is never noticed. Vendor master is never corrected. Problem continues indefinitely.</div>
+            <div class="scol g"><div class="scol-lbl">&#129504; Agentic AI response</div>Claude reads vendor_patterns.json — sees 2 prior WHT failures with the same code. Reasons: "Holding won't fix a vendor master data issue." Escalates to AP manager with high urgency, explains the pattern in the comment, recommends vendor master correction. Stores reflection. Problem gets resolved.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scen">
+        <div class="shead" onclick="tog(2)">
+          <span style="font-size:15px;flex-shrink:0">&#10067;</span>
+          <span class="slbl">Novel situation — invoice type not covered by rules</span>
+          <div class="sbadges"><span class="pill pr" style="font-size:10px">RPA: wrong action</span><span class="pill pg" style="font-size:10px">Agent: handles gracefully</span></div>
+          <span class="chev" id="c2">&#8964;</span>
+        </div>
+        <div class="sbody" id="b2">
+          <div class="srow">
+            <div class="scol r"><div class="scol-lbl">&#129302; RPA response</div>A credit note arrives — negative amount, different tax treatment. No rule covers it. RPA either crashes, holds it with a wrong error message, or worse — submits it incorrectly. Developer intervention required to add a new rule before the next occurrence.</div>
+            <div class="scol g"><div class="scol-lbl">&#129504; Agentic AI response</div>Claude notices the negative amount and credit note type. Reasons: "Standard tax validation rules do not apply to credit notes — applying them would give false failures." Posts a comment explaining it cannot validate this invoice type and escalates for human review with full context. No developer change needed.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scen">
+        <div class="shead" onclick="tog(3)">
+          <span style="font-size:15px;flex-shrink:0">&#10003;</span>
+          <span class="slbl">Clean invoice from trusted, well-known vendor</span>
+          <div class="sbadges"><span class="pill pa" style="font-size:10px">RPA: same full sequence</span><span class="pill pg" style="font-size:10px">Agent: efficient path</span></div>
+          <span class="chev" id="c3">&#8964;</span>
+        </div>
+        <div class="sbody" id="b3">
+          <div class="srow">
+            <div class="scol r"><div class="scol-lbl">&#129302; RPA response</div>Always runs the exact same sequence: extract &#8594; tax &#8594; WHT &#8594; if/else. Same number of steps for McKinsey with 50 clean invoices as for a new high-risk vendor. No efficiency gain. No trust concept. Every invoice costs the same effort.</div>
+            <div class="scol g"><div class="scol-lbl">&#129504; Agentic AI response</div>Claude reads vendor history — 50 clean invoices, 0 failures. Runs core validations efficiently, skips duplicate check and PO tolerance (no signal). Passes quickly, posts brief confirmation, submits. Gets faster and more efficient as vendor trust is established over time.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scen">
+        <div class="shead" onclick="tog(4)">
+          <span style="font-size:15px;flex-shrink:0">&#128200;</span>
+          <span class="slbl">Large invoice — 3x normal amount, same vendor</span>
+          <div class="sbadges"><span class="pill pa" style="font-size:10px">RPA: treats same</span><span class="pill pg" style="font-size:10px">Agent: applies extra scrutiny</span></div>
+          <span class="chev" id="c4">&#8964;</span>
+        </div>
+        <div class="sbody" id="b4">
+          <div class="srow">
+            <div class="scol r"><div class="scol-lbl">&#129302; RPA response</div>Invoice amount is not part of validation rules. RPA runs the same tax and WHT checks regardless of whether the invoice is USD 5,000 or USD 500,000. No additional scrutiny triggered. Amount context is invisible to the process.</div>
+            <div class="scol g"><div class="scol-lbl">&#129504; Agentic AI response</div>Claude notices the invoice is significantly larger than historical averages for this vendor. Decides to also run check_duplicate and check_po_tolerance even if not otherwise triggered. Validates that the amount is properly supported by a PO. Adds a note in the Coupa comment flagging the unusual amount for AP awareness.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-top:14px">
+        <span style="font-size:16px;flex-shrink:0">&#128161;</span>
+        <div>The key insight: <strong>RPA handles the scenario you anticipated.</strong> Agentic AI handles the scenario you didn't — because Claude reasons about what it finds, not just what it was told to expect.</div>
+      </div>
+    </div>
+    </div>
+
+    <!-- MATURITY -->
+    <div class="scr" id="s-maturity">
+    <div class="pad">
+      <div class="sh">AI maturity model — where we are and where we're going</div>
+      <div class="ss">The evolution from hardcoded automation to truly intelligent autonomous agents</div>
+
+      <div class="evol">
+        <div class="estep">
+          <div class="estep-title">Stage 1 — RPA</div>
+          <div class="estep-sub">Fixed rules<br>No memory<br>No reasoning<br>Predictable</div>
+          <div class="estep-tag">Where we started</div>
+        </div>
+        <div class="estep active">
+          <div class="estep-title">Stage 2 — Agentic AI</div>
+          <div class="estep-sub">Tool-use API<br>Long-term memory<br>Claude reasoning<br>Self-improving</div>
+          <div class="estep-tag">v3.0 — now</div>
+        </div>
+        <div class="estep">
+          <div class="estep-title">Stage 3 — Phase 2</div>
+          <div class="estep-sub">SAP validation<br>Auto-correction<br>Predictive flagging<br>Multi-system</div>
+          <div class="estep-tag">Phase 2 planned</div>
+        </div>
+        <div class="estep">
+          <div class="estep-title">Stage 4 — Phase 3</div>
+          <div class="estep-sub">Cross-vendor learning<br>Supplier self-service<br>Proactive prevention<br>Full autonomy</div>
+          <div class="estep-tag">Future vision</div>
+        </div>
+      </div>
+
+      <div class="mat2">
+        <div class="mcard">
+          <div class="mtitle" style="color:#991b1b">&#129302; RPA — maturity scores</div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Autonomy</span><div class="mbar-bg"><div class="mbar" style="width:20%;background:#E24B4A"></div></div><span class="mval" style="color:#E24B4A">20%</span></div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Reasoning</span><div class="mbar-bg"><div class="mbar" style="width:10%;background:#E24B4A"></div></div><span class="mval" style="color:#E24B4A">10%</span></div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Adaptability</span><div class="mbar-bg"><div class="mbar" style="width:15%;background:#E24B4A"></div></div><span class="mval" style="color:#E24B4A">15%</span></div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Memory</span><div class="mbar-bg"><div class="mbar" style="width:0%;background:#E24B4A"></div></div><span class="mval" style="color:#E24B4A">0%</span></div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Learning</span><div class="mbar-bg"><div class="mbar" style="width:0%;background:#E24B4A"></div></div><span class="mval" style="color:#E24B4A">0%</span></div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Novel handling</span><div class="mbar-bg"><div class="mbar" style="width:5%;background:#E24B4A"></div></div><span class="mval" style="color:#E24B4A">5%</span></div>
+          <div style="margin-top:10px;padding:8px 10px;background:#fef2f2;border-radius:6px;font-size:11px;color:#7f1d1d;line-height:1.6">Intelligence lives in the code — not in the system. Brittle outside its designed scenarios. Requires developer to handle every new case.</div>
+        </div>
+        <div class="mcard" style="border-color:#c4b5fd">
+          <div class="mtitle" style="color:#5b21b6">&#129504; Agentic AI v3.0 — maturity scores</div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Autonomy</span><div class="mbar-bg"><div class="mbar" style="width:90%;background:#7F77DD"></div></div><span class="mval" style="color:#5b21b6">90%</span></div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Reasoning</span><div class="mbar-bg"><div class="mbar" style="width:85%;background:#7F77DD"></div></div><span class="mval" style="color:#5b21b6">85%</span></div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Adaptability</span><div class="mbar-bg"><div class="mbar" style="width:80%;background:#7F77DD"></div></div><span class="mval" style="color:#5b21b6">80%</span></div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Memory</span><div class="mbar-bg"><div class="mbar" style="width:75%;background:#7F77DD"></div></div><span class="mval" style="color:#5b21b6">75%</span></div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Learning</span><div class="mbar-bg"><div class="mbar" style="width:70%;background:#7F77DD"></div></div><span class="mval" style="color:#5b21b6">70%</span></div>
+          <div class="mrow"><span style="min-width:110px;font-size:11px">Novel handling</span><div class="mbar-bg"><div class="mbar" style="width:80%;background:#7F77DD"></div></div><span class="mval" style="color:#5b21b6">80%</span></div>
+          <div style="margin-top:10px;padding:8px 10px;background:#f5f3ff;border-radius:6px;font-size:11px;color:#3730a3;line-height:1.6">Intelligence lives in Claude — not in the code. Handles novel situations, learns from experience, and improves automatically with every invoice processed.</div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <span style="font-size:16px;flex-shrink:0">&#128640;</span>
+        <div>The upgrade from Stage 1 to Stage 2 is the hardest leap — it requires rethinking the architecture entirely (tool-use vs hardcoded pipeline). Stages 3 and 4 build naturally on top of the v3.0 foundation we have now.</div>
+      </div>
+    </div>
+    </div>
+  </div>
+  <div class="pf">RPA vs Agentic AI Comparison &nbsp;&middot;&nbsp; Coupa Invoice Validation Agent v3.0 &nbsp;&middot;&nbsp; BCG Internal &nbsp;&middot;&nbsp; May 2026</div>
+</div>
+
+<script>
+function sw(n,b){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('s-'+n).classList.add('on');
+  b.classList.add('on');
+}
+function tog(i){
+  const b=document.getElementById('b'+i);
+  const c=document.getElementById('c'+i);
+  const o=b.classList.toggle('o');
+  c.classList.toggle('o',o);
+}
+</script>
+</body>
+</html>
