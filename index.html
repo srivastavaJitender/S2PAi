@@ -40,6 +40,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* CARDS */
 .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:36px}
 @media(max-width:620px){.cards-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.pain-grid,.benefit-grid-3,.flow-grid{grid-template-columns:1fr !important}}
 .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;transition:border-color .2s,transform .15s;text-decoration:none;display:block}
 .card:hover{border-color:#93c5fd;transform:translateY(-2px)}
 .card.featured{border:2px solid #3b82f6}
@@ -119,8 +120,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="hero-grid"></div>
   <div class="hero-badge"><div class="hero-dot"></div>Agent running &nbsp;&middot;&nbsp; BCG EP&P Ops</div>
   <h1>Coupa Invoice Validation<br><span>Agentic AI &mdash; Stakeholder Review Hub</span></h1>
-  <div class="agentic-tag">&#129504; Upgraded to true agentic AI &nbsp;&middot;&nbsp; v3.0 &nbsp;&middot;&nbsp; Claude tool-use architecture</div>
-  <p>All prototypes, technical designs, and approval materials for the autonomous invoice validation agent. Claude is the orchestrator — not just a tiebreaker.</p>
+  <div class="agentic-tag">&#129504; Claude agentic AI &nbsp;&middot;&nbsp; v3.0 &nbsp;&middot;&nbsp; Autonomous invoice validation</div>
+  <p>Invoices failing validation get stuck in Coupa and fail SAP integration — causing payment delays and manual rework. This agent validates every invoice autonomously before it reaches SAP, with zero human intervention on clean invoices.</p>
   <div class="hero-meta">
     <span>&#128197; May 2026</span>
     <span>&#128274; BCG Internal &middot; Confidential</span>
@@ -131,28 +132,174 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div class="outer">
 
-  <!-- AGENTIC CALLOUT -->
-  <div class="slbl">What makes this true agentic AI</div>
-  <div class="agentic-callout">
-    <div class="ac-head">
-      <span class="ac-badge">v3.0 upgrade</span>
-      <div class="ac-title">Claude is now the orchestrator — not a tiebreaker at the end of a pipeline</div>
-    </div>
-    <div class="ac-body">
-      The original design was sophisticated RPA — a hardcoded sequence that called Claude only when it got confused. v3.0 redesigns the core: Claude receives the invoice ID and 12 tools, then decides everything autonomously — which tools to call, in what order, what action to take, and what to write in Coupa. No fixed sequence. No templates.
-    </div>
-    <div class="ac-grid">
-      <div class="ac-item">
-        <div class="ac-item-title">&#128296; Tool-use architecture</div>
-        <div class="ac-item-desc">12 tools available. Claude decides which to call and when — fetch, validate, cross-check, act, escalate, learn. No hardcoded order.</div>
+  <!-- BUSINESS CASE -->
+  <div class="slbl">The problem we are solving</div>
+
+  <!-- CURRENT PAIN — 3 problem cards -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+
+    <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:16px 18px">
+      <div style="font-size:22px;margin-bottom:8px">&#128274;</div>
+      <div style="font-size:13px;font-weight:600;color:#7f1d1d;margin-bottom:6px">Invoices stuck in Coupa</div>
+      <div style="font-size:12px;color:#991b1b;line-height:1.7">
+        Invoices with tax or WHT errors are placed on hold in Coupa and sit in a queue. The AP team must manually review each one, identify the error, contact the supplier, and re-submit — often taking 24–48 hours per invoice.
       </div>
-      <div class="ac-item">
-        <div class="ac-item-title">&#129504; Long-term memory</div>
-        <div class="ac-item-desc">vendor_patterns.json grows with every invoice. Claude reads vendor history before validating — past failures shape current decisions.</div>
+      <div style="margin-top:10px;padding:8px 10px;background:#fee2e2;border-radius:6px;font-size:11px;color:#7f1d1d;line-height:1.6">
+        <strong>Today:</strong> Human-in-the-loop (HITL) — every stuck invoice requires AP team intervention before it can move forward.
       </div>
-      <div class="ac-item">
-        <div class="ac-item-title">&#128260; Reflection + learning</div>
-        <div class="ac-item-desc">store_reflection tool called after every invoice. Claude records patterns and suggests rule improvements. Gets smarter over time.</div>
+    </div>
+
+    <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:16px 18px">
+      <div style="font-size:22px;margin-bottom:8px">&#9888;</div>
+      <div style="font-size:13px;font-weight:600;color:#7c2d12;margin-bottom:6px">SAP integration failures</div>
+      <div style="font-size:12px;color:#9a3412;line-height:1.7">
+        Invoices that pass Coupa but carry invalid tax codes or WHT mismatches fail during SAP integration. These generate SAP error queues, require manual correction by finance teams, delay vendor payments, and create compliance risk.
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:#fed7aa;border-radius:6px;font-size:11px;color:#7c2d12;line-height:1.6">
+        <strong>Impact:</strong> Each SAP rejection costs ~4 hours of rework across AP, finance, and the vendor — and disrupts payment timelines.
+      </div>
+    </div>
+
+    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:16px 18px">
+      <div style="font-size:22px;margin-bottom:8px">&#128336;</div>
+      <div style="font-size:13px;font-weight:600;color:#713f12;margin-bottom:6px">Manual validation — no scale</div>
+      <div style="font-size:12px;color:#854d0e;line-height:1.7">
+        The AP team manually checks tax codes, WHT codes, and rates for every invoice before submission. This is repetitive, error-prone, and consumes approximately 3 hours of AP team time per day — time that should be spent on higher-value work.
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:#fef3c7;border-radius:6px;font-size:11px;color:#713f12;line-height:1.6">
+        <strong>Root cause:</strong> No automated pre-validation layer between invoice submission and the SAP integration pipeline.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CURRENT FLOW vs FUTURE FLOW -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+
+    <!-- Current HITL flow -->
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+      <div style="background:#fef2f2;padding:10px 16px;border-bottom:1px solid #fca5a5;display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px">&#128534;</span>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#7f1d1d">Current process — manual HITL</div>
+          <div style="font-size:11px;color:#991b1b">Human intervention required at every failure point</div>
+        </div>
+      </div>
+      <div style="padding:14px 16px">
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#128196;</span>
+            <div style="font-size:12px;color:#374151"><strong>Supplier submits invoice</strong> in Coupa</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#10060;</span>
+            <div style="font-size:12px;color:#991b1b"><strong>Validation fails</strong> — tax code or WHT error detected. Invoice placed on hold in Coupa automatically.</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#128101;</span>
+            <div style="font-size:12px;color:#7f1d1d"><strong>AP team notified</strong> — manually reviews invoice, identifies error, contacts supplier. <em>Can take 24–48 hrs.</em></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#9997;</span>
+            <div style="font-size:12px;color:#374151"><strong>Supplier corrects invoice</strong> and resubmits. AP team manually re-validates and releases.</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#9654;</span>
+            <div style="font-size:12px;color:#374151"><strong>Invoice moves to SAP</strong> integration — if errors persist, SAP rejects it. Rework cycle starts again.</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#128337;</span>
+            <div style="font-size:12px;color:#991b1b"><strong>Total cycle: 2–5 days</strong> per failed invoice. Vendor payment delayed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Future agentic flow -->
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+      <div style="background:#f0fdf4;padding:10px 16px;border-bottom:1px solid #86efac;display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px">&#129504;</span>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#14532d">With Claude agentic AI</div>
+          <div style="font-size:11px;color:#166534">Autonomous validation — zero human intervention on clean invoices</div>
+        </div>
+      </div>
+      <div style="padding:14px 16px">
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#128196;</span>
+            <div style="font-size:12px;color:#374151"><strong>Supplier submits invoice</strong> in Coupa</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#9200;</span>
+            <div style="font-size:12px;color:#166534"><strong>Agent picks it up within 10 minutes</strong> — polls Coupa automatically, 24/7.</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#10003;</span>
+            <div style="font-size:12px;color:#166534"><strong>Pass:</strong> Auto-submitted for approval. AP hold cleared. No human needed. <em>Done in &lt;10 min.</em></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#128172;</span>
+            <div style="font-size:12px;color:#374151"><strong>Fail:</strong> Agent writes a detailed error comment in Coupa — exact line, code, corrective step. AP team sees it instantly.</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#8635;</span>
+            <div style="font-size:12px;color:#374151"><strong>After supplier fixes it:</strong> Agent detects the change and re-validates automatically within 10 minutes.</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0">
+            <span style="font-size:14px;flex-shrink:0;margin-top:1px">&#128337;</span>
+            <div style="font-size:12px;color:#166534"><strong>Clean invoices: &lt;10 min.</strong> Failed invoices: AP time focused only on correction, not discovery.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BENEFIT OF CLAUDE AGENTIC vs HITL -->
+  <div style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:12px;padding:20px 22px;margin-bottom:36px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <span style="background:#5b21b6;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:10px">Claude agentic AI — business benefits</span>
+      <div style="font-size:14px;font-weight:600;color:#3730a3">Why this is the right solution for EP&P Ops</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:#ede9fe;border-radius:8px;padding:12px 14px">
+        <div style="font-size:18px;margin-bottom:6px">&#9200;</div>
+        <div style="font-size:12px;font-weight:600;color:#3730a3;margin-bottom:4px">Eliminates HITL on clean invoices</div>
+        <div style="font-size:11px;color:#4338ca;line-height:1.6">The AP team no longer needs to manually review every invoice before submission. Claude validates autonomously — human effort is only needed when the agent flags a genuine error that the supplier must correct.</div>
+        <div style="margin-top:8px;font-size:12px;color:#4338ca;font-style:italic">Estimated saving to be confirmed with EP&P Ops team</div>
+      </div>
+      <div style="background:#ede9fe;border-radius:8px;padding:12px 14px">
+        <div style="font-size:18px;margin-bottom:6px">&#128737;</div>
+        <div style="font-size:12px;font-weight:600;color:#3730a3;margin-bottom:4px">Prevents SAP integration failures</div>
+        <div style="font-size:11px;color:#4338ca;line-height:1.6">Every tax and WHT error is caught before the invoice reaches the SAP integration layer. This eliminates SAP error queues, prevents payment delays, and removes the rework cycle that currently costs ~4 hours per rejection.</div>
+        <div style="margin-top:8px;font-size:16px;font-weight:600;color:#16a34a">Zero SAP rejections</div>
+      </div>
+      <div style="background:#ede9fe;border-radius:8px;padding:12px 14px">
+        <div style="font-size:18px;margin-bottom:6px">&#129504;</div>
+        <div style="font-size:12px;font-weight:600;color:#3730a3;margin-bottom:4px">Smarter than HITL over time</div>
+        <div style="font-size:11px;color:#4338ca;line-height:1.6">Unlike manual review, Claude remembers every vendor's history. A vendor that repeatedly submits wrong WHT codes gets escalated — not just held again. The agent detects systemic issues that humans in a manual process would miss across hundreds of invoices.</div>
+        <div style="margin-top:8px;font-size:16px;font-weight:600;color:#1d4ed8">Learns every invoice</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div style="background:#ede9fe;border-radius:8px;padding:12px 14px">
+        <div style="font-size:18px;margin-bottom:6px">&#128172;</div>
+        <div style="font-size:12px;font-weight:600;color:#3730a3;margin-bottom:4px">Actionable error comments in Coupa</div>
+        <div style="font-size:11px;color:#4338ca;line-height:1.6">Claude writes its own contextual comment directly in the Coupa invoice — not a generic error code. The supplier sees exactly which line, which code, and what to fix. First-time fix rate improves significantly vs today's manual process.</div>
+        <div style="margin-top:8px;font-size:16px;font-weight:600;color:#16a34a">Specific &amp; actionable</div>
+      </div>
+      <div style="background:#ede9fe;border-radius:8px;padding:12px 14px">
+        <div style="font-size:18px;margin-bottom:6px">&#8635;</div>
+        <div style="font-size:12px;font-weight:600;color:#3730a3;margin-bottom:4px">Auto re-validates after correction</div>
+        <div style="font-size:11px;color:#4338ca;line-height:1.6">Once the supplier corrects the invoice in Coupa, the agent detects the change within 10 minutes and re-runs validation automatically. No AP team action needed to re-trigger the process — the HITL loop is removed entirely.</div>
+        <div style="margin-top:8px;font-size:16px;font-weight:600;color:#1d4ed8">10 min re-validation</div>
+      </div>
+      <div style="background:#ede9fe;border-radius:8px;padding:12px 14px">
+        <div style="font-size:18px;margin-bottom:6px">&#128065;</div>
+        <div style="font-size:12px;font-weight:600;color:#3730a3;margin-bottom:4px">Full audit trail — zero blind spots</div>
+        <div style="font-size:11px;color:#4338ca;line-height:1.6">Every agent decision is logged with Claude's full reasoning, tool chain, and iteration count. AP managers and auditors can see exactly what was checked, what was found, and why the decision was made — with no gaps or undocumented manual steps.</div>
+        <div style="margin-top:8px;font-size:16px;font-weight:600;color:#1d4ed8">100% traceable</div>
       </div>
     </div>
   </div>
